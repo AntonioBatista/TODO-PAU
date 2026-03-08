@@ -182,22 +182,33 @@
 </div>
 <script>
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_DOMINIO.firebaseapp.com",
-  projectId: "TU_PROJECT_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyDGfPqbfdJwWn_i7NPp4YbyQjYz2EPvoFk",
+  authDomain: "todopau-bat.firebaseapp.com",
+  projectId: "todopau-bat",
+  appId: "1:329604600256:web:d0b43bc40bb2c821c67825"
 };
 
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const auth = firebase.auth();
 
 function loginGoogle() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider);
+    const provider = new firebase.auth.GoogleAuthProvider();
+    // Usamos signInWithPopup pero capturamos errores de bloqueo de ventanas
+    auth.signInWithPopup(provider).catch(error => {
+        if (error.code === 'auth/popup-closed-by-user') {
+            console.log("El usuario cerró la ventana de login");
+        } else {
+            alert("Error al acceder: " + error.message);
+        }
+    });
 }
 
 function logout() {
-  auth.signOut();
+    auth.signOut().then(() => {
+        window.location.reload(); // Recarga para limpiar estados de memoria
+    });
 }
 
 function openExamPanel(){
@@ -209,17 +220,27 @@ function openExamPanel(){
 }
     
 auth.onAuthStateChanged(user => {
-  const btn = document.getElementById("loginBtn");
-  if(user){
-    btn.textContent = "Cerrar sesión";
-    btn.onclick = logout;
-    window.isUserLogged = true;
-  } else {
-    btn.textContent = "Entrar con Google";
-    btn.onclick = loginGoogle;
-    window.isUserLogged = false;
-    
-  }
+    const btn = document.getElementById("loginBtn");
+    if (user) {
+        console.log("Usuario identificado:", user.email);
+        btn.innerHTML = `
+            <div class="flex items-center gap-2">
+                <img src="${user.photoURL}" class="w-5 h-5 rounded-full">
+                <span>Salir</span>
+            </div>
+        `;
+        btn.onclick = logout;
+        window.isUserLogged = true;
+    } else {
+        btn.textContent = "Entrar con Google";
+        btn.onclick = loginGoogle;
+        window.isUserLogged = false;
+        // Si tienes exámenes seleccionados y el usuario sale, podrías querer limpiarlos
+        selectedIds.clear();
+        document.getElementById('examCount').textContent = "0";
+    }
+    // Re-renderizamos para habilitar/deshabilitar botones de solución
+    render();
 });
 </script>
 <script>
@@ -475,67 +496,58 @@ function autoChem(text) {
 function render() {
     const year = document.getElementById('yearSelect').value;
     const topic = document.getElementById('topicSelect').value;
-    const term = document.getElementById('search').value.trim().toLowerCase();
+    const term = document.getElementById('search').value.toLowerCase();
     const container = document.getElementById('questions');
-    const stats = document.getElementById('stats');
 
     if (!term && year === 'all' && topic === 'all' && activeTagFilter === 'all') {
-        container.innerHTML = ''; stats.textContent = "Busca o filtra para ver problemas";
-        document.getElementById('placeholder-icon').style.display = 'block'; return;
+        container.innerHTML = ''; document.getElementById('placeholder-icon').style.display = 'block';
+        document.getElementById('stats').textContent = "Selecciona un bloque para comenzar"; return;
     }
     document.getElementById('placeholder-icon').style.display = 'none';
 
     const filtered = allQuestions.filter(q => {
-        const okText = (q.text || "").toLowerCase().includes(term);
-        const okTopic = topic === 'all' || q.topic_name === topic;
-        const okYear = year === 'all' || q.exam_year == year;
-        const okTag = activeTagFilter === 'all' || q.detected_topics?.includes(activeTagFilter);
-        return okText && okTopic && okYear && okTag;
+        return (q.text||"").toLowerCase().includes(term) && (topic==='all'||q.topic_name===topic) && 
+               (year==='all'||q.exam_year==year) && (activeTagFilter==='all'||q.detected_topics?.includes(activeTagFilter));
     });
 
-    stats.textContent = `${filtered.length} RESULTADOS ENCONTRADOS`;
+    document.getElementById('stats').textContent = `${filtered.length} RESULTADOS ENCONTRADOS`;
     container.innerHTML = '';
     
     filtered.forEach(q => {
-        const isSelected = selectedIds.has(q.id);
-        const hasSolution = q.solution && q.solution.trim().length > 0;
-        const card = document.createElement('div');
-        card.className = `data-row ${isSelected ? 'ring-2 ring-black border-black shadow-md' : ''}`;
-        const contentsHTML = (q.detected_topics || []).map(t => `<span class="tag-badge pill-content">${t}</span>`).join(' ');
+        const isSel = selectedIds.has(q.id);
+        const hasSol = q.solution && q.solution.trim().length > 0;
+        const solBtnText = !window.isUserLogged ? "LOGIN PARA SOLUCIÓN" : (hasSol ? "VER SOLUCIÓN" : "SIN SOLUCIÓN");
+        const solBtnClass = !window.isUserLogged ? "opacity-40" : (hasSol ? "btn-sol-active" : "btn-sol-empty");
 
+        const card = document.createElement('div');
+        card.className = `data-row ${isSel ? 'ring-2 ring-black shadow-lg' : ''}`;
         card.innerHTML = `
-            <div class="card-header-area mb-2">
+            <div class="card-header-area">
                 <h2 class="text-3xl font-black leading-tight">${q.exam_year}</h2>
-                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">${q.exam_model || ''}</span>
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">${q.exam_model || ''}</span>
             </div>
-        
             <div class="card-tags-area">
                 <span class="tag-badge pill-topic">${q.topic_name}</span>
                 ${(q.detected_topics || []).map(t => `<span class="tag-badge pill-content">${t}</span>`).join('')}
             </div>
-        
             <div class="card-content-area prose prose-sm text-gray-700 font-medium">
                 ${renderContent(q)}
             </div>
-            
             <div id="sol-${q.id}" class="solucion-panel prose prose-sm">
-                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 border-b pb-1">Solución Sugerida</p>
-                ${renderFormattedText(q.solution)}
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b pb-1 mb-2">Solución Sugerida</p>
+                ${marked.parse(autoChem(q.solution || ""))}
             </div>
-        
-            <div class="card-footer-area flex justify-between items-center no-print border-t pt-4 mt-4">
+            <div class="card-footer-area flex justify-between items-center border-t pt-4 mt-4">
                 <div class="flex gap-2">
-                    <button onclick="toggleInExam('${q.id}')" class="text-[9px] font-black py-2 px-6 rounded-xl border transition-all ${isSelected ? 'bg-red-500 border-red-500 text-white shadow-md' : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-black hover:text-white'}">
-                        ${isSelected ? '✕ QUITAR' : '+ SELECCIONAR'}
+                    <button onclick="toggleInExam('${q.id}')" class="text-[9px] font-black py-2 px-6 rounded-xl border ${isSel ? 'bg-red-500 text-white' : 'bg-gray-50 text-gray-500 hover:bg-black hover:text-white'}">
+                        ${isSel ? '✕ QUITAR' : '+ SELECCIONAR'}
                     </button>
-                    <button id="btn-sol-${q.id}" data-has-sol="${hasSolution}" onclick="toggleSolucion('${q.id}')" 
-                        class="text-[9px] font-black py-2 px-6 rounded-xl border transition-all ${hasSolution ? 'btn-sol-active' : 'btn-sol-empty text-gray-300'}">
-                        ${hasSolution ? 'VER SOLUCIÓN' : 'SIN SOLUCIÓN'}
+                    <button id="btn-sol-${q.id}" onclick="toggleSolucion('${q.id}')" class="text-[9px] font-black py-2 px-6 rounded-xl border ${solBtnClass}">
+                        ${solBtnText}
                     </button>
                 </div>
                 <span class="text-[9px] font-mono text-gray-300 italic">${q.community || ''}</span>
-            </div>
-        `;
+            </div>`;
         container.appendChild(card);
     });
     renderMathInElement(container, { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] });
