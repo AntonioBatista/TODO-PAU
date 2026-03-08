@@ -72,6 +72,8 @@
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 </head>
 
 <body class="h-screen flex flex-col">
@@ -97,10 +99,16 @@
     </nav>
 
     <div class="flex items-center gap-3">
-        <button onclick="document.getElementById('examPanel').classList.add('open')" class="bg-black text-white px-5 py-2 rounded-xl text-[10px] font-bold tracking-widest transition shadow-lg">
-            MODO EXAMEN (<span id="examCount">0</span>)
-        </button>
-    </div>
+    <button id="loginBtn"
+      class="bg-white border px-4 py-2 rounded-xl text-xs font-bold">
+      Entrar con Google
+    </button>
+
+    <button onclick="openExamPanel()"
+      class="bg-black text-white px-5 py-2 rounded-xl text-[10px] font-bold tracking-widest transition shadow-lg">
+      MODO EXAMEN (<span id="examCount">0</span>)
+    </button>
+</div>
 </header>
 
 <div class="flex flex-1 overflow-hidden relative">
@@ -172,7 +180,48 @@
         </div>
     </div>
 </div>
+<script>
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_DOMINIO.firebaseapp.com",
+  projectId: "TU_PROJECT_ID",
+  appId: "TU_APP_ID"
+};
 
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+function loginGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider);
+}
+
+function logout() {
+  auth.signOut();
+}
+
+function openExamPanel(){
+  if(!window.isUserLogged){
+    alert("Debes iniciar sesión para preparar exámenes");
+    return;
+  }
+  document.getElementById('examPanel').classList.add('open');
+}
+    
+auth.onAuthStateChanged(user => {
+  const btn = document.getElementById("loginBtn");
+  if(user){
+    btn.textContent = "Cerrar sesión";
+    btn.onclick = logout;
+    window.isUserLogged = true;
+  } else {
+    btn.textContent = "Entrar con Google";
+    btn.onclick = loginGoogle;
+    window.isUserLogged = false;
+    
+  }
+});
+</script>
 <script>
 const subjectConfig = {
     'QUIM': { title: 'Química', folder: 'QUIM', file: 'indexquim.json', color: '#00c853', soft: 'rgba(0, 200, 83, 0.1)', icon: 'https://img.icons8.com/fluency/48/test-tube.png' },
@@ -187,6 +236,7 @@ let currentSubject = "QUIM";
 let allQuestions = [];
 let selectedIds = new Set();
 let activeTagFilter = "all";
+window.isUserLogged = false;
 
 function autoChem(text) {
     if (!text) return "";
@@ -339,16 +389,15 @@ function updateDynamicTags() {
     });
 }
 
-function toggleSolucion(id) {
-    const panel = document.getElementById(`sol-${id}`);
-    const btn = document.getElementById(`btn-sol-${id}`);
-    if (panel.classList.contains('visible')) {
-        panel.classList.remove('visible');
-        btn.innerHTML = btn.dataset.hasSol === "true" ? "VER SOLUCIÓN" : "SIN SOLUCIÓN";
-    } else {
-        panel.classList.add('visible');
-        btn.innerHTML = "OCULTAR SOLUCIÓN";
-    }
+function toggleSolucion(id){
+  if(!window.isUserLogged){
+    alert("Debes iniciar sesión con Google para ver soluciones");
+    return;
+  }
+  const panel = document.getElementById(`sol-${id}`);
+  const btn = document.getElementById(`btn-sol-${id}`);
+  panel.classList.toggle('visible');
+  btn.innerHTML = panel.classList.contains('visible') ? "OCULTAR SOLUCIÓN" : "VER SOLUCIÓN";
 }
    // 🛠️ Función Maestra de Limpieza y Formateo v6.5
 function cleanTextEngine(text) {
@@ -506,9 +555,15 @@ function runSorteo() {
     render();
 }
 
-function toggleInExam(id) {
-    if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
-    document.getElementById('examCount').textContent = selectedIds.size; render();
+function toggleInExam(id){
+  if(!window.isUserLogged){
+    alert("Debes iniciar sesión para preparar exámenes");
+    return;
+  }
+  if (selectedIds.has(id)) selectedIds.delete(id);
+  else selectedIds.add(id);
+  document.getElementById('examCount').textContent = selectedIds.size;
+  render();
 }
 
 function resetFilters() {
@@ -517,21 +572,61 @@ function resetFilters() {
 }
 
 function printExam() {
+
+    // 🔒 Bloqueo si no está logueado
+    if(!window.isUserLogged){
+        alert("Debes iniciar sesión para generar exámenes");
+        return;
+    }
+
     const qs = allQuestions.filter(q => selectedIds.has(q.id));
     if (qs.length === 0) return alert("Selecciona preguntas primero");
-    const win = window.open('', '_blank');
-    const hData = { inst: document.getElementById('h-inst').value || "CENTRO EDUCATIVO", title: document.getElementById('h-title').value || "EXAMEN", curso: document.getElementById('h-course').value || "____", prof: document.getElementById('h-prof').value || "____", instr: document.getElementById('h-instr').value || "" };
 
-    let h = `<html><head><title>Examen</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-    <style>body{font-family:'Lora', serif; padding:40px;} .header{border-bottom:2px solid #000; padding-bottom:15px; margin-bottom:30px;} .q{margin-bottom:40px; page-break-inside:avoid;} .problem-image{max-width:300px; display:block; margin: 15px 0;} sub{font-size:0.7em;}</style></head><body>
-    <div class="header"><h1>${hData.inst}</h1><p><strong>${hData.title}</strong> - ${subjectConfig[currentSubject].title}</p>
-    <p>Nombre: ___________________________________ | Curso: ${hData.curso} | Prof: ${hData.prof}</p>
-    <p style="font-size:11px; font-style:italic;">${hData.instr}</p></div>`;
+    const win = window.open('', '_blank');
+
+    const hData = {
+        inst: document.getElementById('h-inst').value || "CENTRO EDUCATIVO",
+        title: document.getElementById('h-title').value || "EXAMEN",
+        curso: document.getElementById('h-course').value || "____",
+        prof: document.getElementById('h-prof').value || "____",
+        instr: document.getElementById('h-instr').value || ""
+    };
+
+    let h = `<html><head><title>Examen</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <style>
+        body{font-family:'Lora', serif; padding:40px;}
+        .header{border-bottom:2px solid #000; padding-bottom:15px; margin-bottom:30px;}
+        .q{margin-bottom:40px; page-break-inside:avoid;}
+        .problem-image{max-width:300px; display:block; margin: 15px 0;}
+        sub{font-size:0.7em;}
+    </style></head><body>
+
+    <div class="header">
+        <h1>${hData.inst}</h1>
+        <p><strong>${hData.title}</strong> - ${subjectConfig[currentSubject].title}</p>
+        <p>Nombre: ___________________________________ | Curso: ${hData.curso} | Prof: ${hData.prof}</p>
+        <p style="font-size:11px; font-style:italic;">${hData.instr}</p>
+    </div>`;
     
-    qs.forEach((q, i) => { h += `<div class="q"><strong>EJERCICIO ${i+1}.</strong><br>${renderContent(q)}</div>`; });
+    qs.forEach((q, i) => {
+        h += `<div class="q"><strong>EJERCICIO ${i+1}.</strong><br>${renderContent(q)}</div>`;
+    });
     
-    h += `<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"><\/script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"><\/script><script>renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false}]});window.print();<\/script></body></html>`;
-    win.document.write(h); win.document.close();
+    h += `<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"><\/script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"><\/script>
+    <script>
+        renderMathInElement(document.body,{
+            delimiters:[
+                {left:"$$",right:"$$",display:true},
+                {left:"$",right:"$",display:false}
+            ]
+        });
+        window.print();
+    <\/script></body></html>`;
+
+    win.document.write(h);
+    win.document.close();
 }
 
 document.addEventListener('DOMContentLoaded', () => { document.getElementById('search').oninput = render; switchSubject('QUIM'); });
