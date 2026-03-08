@@ -241,22 +241,39 @@ function switchSubject(id) {
 
 async function loadData() {
     const loader = document.getElementById('loader');
-    const config = subjectConfig[currentSubject];
     loader.classList.remove('hidden');
+
+    // Traduce tu código interno de materia al nombre del backend
+    const subjectMap = {
+        QUIM: "quimica",
+        MATII: "matii"
+    };
+
     try {
-        const response = await fetch(`https://backend-todopau.onrender.com/${currentSubject}`);
+        // 1️⃣ Cargar índice desde tu backend
+        const response = await fetch(
+            `https://backend-todopau.onrender.com/api/${subjectMap[currentSubject]}/index`
+        );
         const index = await response.json();
+
+        // 2️⃣ Cargar cada archivo de preguntas desde el backend
         const promises = index.topics.map(async t => {
-            const res = await fetch(`${config.folder}/${t.file}`);
-            let raw = await res.text();
-            raw = raw.replace(/\\/g, "\\\\").replace(/\\\\n/g, "\\n").replace(/\\\\"/g, "\\\"").replace(/\\\\u/g, "\\u");
-            return JSON.parse(raw);
+            const res = await fetch(
+                `https://backend-todopau.onrender.com/api/${subjectMap[currentSubject]}/file?name=${t.file}`
+            );
+            return await res.json();
         });
+
         const results = await Promise.all(promises);
         allQuestions = results.flat();
+
         populateSelectors();
         loader.classList.add('hidden');
-    } catch (e) { console.error("Error", e); }
+        render();
+
+    } catch (e) {
+        console.error("Error cargando datos:", e);
+    }
 }
 
 function populateSelectors() {
