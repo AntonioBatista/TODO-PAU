@@ -195,10 +195,19 @@ const auth = firebase.auth();
 
 function loginGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
-    // Usamos signInWithPopup pero capturamos errores de bloqueo de ventanas
-    auth.signInWithPopup(provider).catch(error => {
+    
+    // Configuramos parámetros para mejorar la compatibilidad
+    provider.setCustomParameters({
+        prompt: 'select_account'
+    });
+
+    auth.signInWithPopup(provider).then((result) => {
+        console.log("Login exitoso");
+    }).catch(error => {
         if (error.code === 'auth/popup-closed-by-user') {
-            console.log("El usuario cerró la ventana de login");
+            console.log("El usuario cerró la ventana.");
+        } else if (error.code === 'auth/unauthorized-domain') {
+            alert("ERROR: Este dominio no está autorizado en la consola de Firebase. Añádelo en Authentication > Settings > Authorized Domains.");
         } else {
             alert("Error al acceder: " + error.message);
         }
