@@ -244,7 +244,7 @@ async function loadData() {
     const config = subjectConfig[currentSubject];
     loader.classList.remove('hidden');
     try {
-        const response = await fetch(`${config.folder}/${config.file}`);
+        const response = await fetch(`https://backend-todopau.onrender.com/${currentSubject}`);
         const index = await response.json();
         const promises = index.topics.map(async t => {
             const res = await fetch(`${config.folder}/${t.file}`);
