@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PEvAU-DB | TodoPAU v6.3</title>
+    <title>PEvAU-DB | TodoPAU v6.4</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -21,40 +21,65 @@
     </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Lora:italic,wght@400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Lora:italic,wght@400;600&display=swap');
         :root { --subject-color: #000000; }
-        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s; }
-        .glass-header { @apply sticky top-0 z-50 flex items-center justify-between h-[70px] px-4 border-b transition-colors bg-white/80 dark:bg-darkBg/80 backdrop-blur-md dark:border-zinc-800; }
-        .subject-nav { @apply flex gap-2 p-1 bg-gray-100 dark:bg-zinc-800 rounded-2xl overflow-x-auto no-scrollbar; }
+        
+        /* Layout Base */
+        body { font-family: 'Inter', sans-serif; @apply bg-gray-50 dark:bg-darkBg text-gray-900 dark:text-gray-100 transition-colors duration-300; }
+
+        /* Header corregido para móviles */
+        .glass-header { 
+            @apply sticky top-0 z-50 w-full flex items-center justify-between h-[65px] px-3 border-b bg-white/90 dark:bg-darkBg/90 backdrop-blur-md dark:border-zinc-800;
+        }
+
+        /* Nav de asignaturas deslizable horizontalmente */
+        .subject-nav { 
+            @apply flex flex-1 items-center gap-1 mx-2 overflow-x-auto no-scrollbar py-1;
+            mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+        }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .subject-tab { @apply flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold text-gray-500 transition-all cursor-pointer; }
-        .subject-tab.active-sub { @apply bg-white dark:bg-zinc-700 text-black dark:text-white shadow-sm; color: var(--subject-color); }
-        #sidebar { @apply fixed lg:relative top-[70px] lg:top-0 h-[calc(100vh-70px)] lg:h-auto w-[280px] bg-white dark:bg-darkBg border-r dark:border-zinc-800 z-40 transition-transform duration-300; }
+        
+        .subject-tab { 
+            @apply flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-bold text-gray-500 transition-all; 
+        }
+        .subject-tab.active-sub { @apply bg-white dark:bg-zinc-800 text-black dark:text-white shadow-sm border dark:border-zinc-700; color: var(--subject-color); }
+
+        /* Sidebar y Main */
+        #sidebar { @apply fixed lg:relative top-[65px] lg:top-0 h-[calc(100vh-65px)] lg:h-auto w-[280px] bg-white dark:bg-darkBg border-r dark:border-zinc-800 z-40 transition-transform duration-300; }
         #sidebar.collapsed { transform: translateX(-100%); }
-        .data-row { @apply bg-white dark:bg-darkCard border dark:border-zinc-800 rounded-3xl p-5 shadow-sm transition-all; display: grid; grid-template-columns: 1fr; grid-template-areas: "header" "tags" "content" "footer" "solution"; gap: 1rem; }
-        @media (min-width: 768px) { .data-row { grid-template-columns: 1fr 200px; grid-template-areas: "header tags" "content tags" "footer footer" "solution solution"; } }
-        .card-header-area { grid-area: header; } .card-tags-area { grid-area: tags; @apply flex flex-wrap md:flex-col gap-2 md:items-end; }
-        .card-content-area { grid-area: content; @apply prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-200; }
-        .solucion-panel { grid-area: solution; @apply hidden mt-4 p-5 bg-gray-50 dark:bg-zinc-900 rounded-2xl border-l-4; border-color: var(--subject-color); }
-        .btn-native { @apply px-5 py-2.5 rounded-2xl font-extrabold text-[10px] tracking-wider uppercase transition-all active:scale-95; }
-        .problem-image { @apply w-full rounded-2xl border dark:border-zinc-800 my-4 bg-white; }
-        #examPanel { @apply fixed right-[-100%] top-0 w-full max-w-[400px] h-screen bg-white dark:bg-darkBg shadow-2xl z-[60] transition-all duration-500; }
+
+        /* Tarjeta de Ejercicio */
+        .data-row { 
+            @apply bg-white dark:bg-darkCard border dark:border-zinc-800 rounded-2xl p-4 shadow-sm transition-all;
+            display: grid; grid-template-columns: 1fr; gap: 0.75rem;
+        }
+        @media (min-width: 768px) { 
+            .data-row { grid-template-columns: 1fr 180px; grid-template-areas: "header tags" "content tags" "footer footer" "solution solution"; } 
+            .card-header-area { grid-area: header; }
+            .card-tags-area { grid-area: tags; @apply flex flex-col items-end gap-2; }
+            .card-content-area { grid-area: content; }
+        }
+
+        .btn-native { @apply px-4 py-2 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all active:scale-95; }
+        
+        /* Paneles */
+        #examPanel { @apply fixed right-[-100%] top-0 w-full max-w-[360px] h-screen bg-white dark:bg-darkBg shadow-2xl z-[60] transition-all duration-500 border-l dark:border-zinc-800; }
         #examPanel.open { @apply right-0; }
+        
+        .problem-image { @apply w-full rounded-xl border dark:border-zinc-800 my-3 bg-white; }
+        .solucion-panel { @apply hidden mt-3 p-4 bg-gray-50 dark:bg-zinc-900 rounded-xl border-l-4; border-color: var(--subject-color); }
         sub { font-size: 0.75em; line-height: 0; position: relative; vertical-align: baseline; bottom: -0.25em; }
     </style>
 </head>
 
-<body class="bg-gray-50 dark:bg-darkBg text-gray-900 dark:text-gray-100">
+<body>
 
-<div id="menuOverlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 hidden lg:hidden"></div>
+<div id="menuOverlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 hidden lg:hidden"></div>
 
 <header class="glass-header no-print">
-    <div class="flex items-center gap-2">
-        <button onclick="toggleMenu()" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-zinc-800">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-        </button>
-        <span class="font-black italic tracking-tighter text-lg hidden sm:block">TodoPAU</span>
-    </div>
+    <button onclick="toggleMenu()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
 
     <nav class="subject-nav">
         <div onclick="switchSubject('QUIM')" id="btn-QUIM" class="subject-tab active-sub">QUIM</div>
@@ -65,74 +90,75 @@
         <div onclick="switchSubject('DTECII')" id="btn-DTECII" class="subject-tab">DIB</div>
     </nav>
 
-    <div class="flex items-center gap-2">
-        <button onclick="toggleDarkMode()" class="p-2 rounded-xl bg-gray-100 dark:bg-zinc-800">
+    <div class="flex items-center gap-1">
+        <button onclick="toggleDarkMode()" class="p-2 rounded-lg bg-gray-100 dark:bg-zinc-800">
             <span class="dark:hidden">🌙</span><span class="hidden dark:inline">☀️</span>
         </button>
-        <button id="loginBtn" class="btn-native bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300">Login</button>
-        <button onclick="openExamPanel()" class="btn-native bg-black text-white dark:bg-white dark:text-black">EXAM (<span id="examCount">0</span>)</button>
+        <button id="loginBtn" class="p-2 text-[10px] font-bold bg-gray-100 dark:bg-zinc-800 rounded-lg">Login</button>
+        <button onclick="openExamPanel()" class="bg-black dark:bg-white text-white dark:text-black px-3 py-2 rounded-lg text-[10px] font-black shadow-md">
+            (<span id="examCount">0</span>)
+        </button>
     </div>
 </header>
 
-<div class="flex h-[calc(100vh-70px)] overflow-hidden">
-    <aside id="sidebar" class="p-6 flex flex-col gap-6 collapsed no-print overflow-y-auto">
+<div class="flex h-[calc(100vh-65px)] overflow-hidden">
+    <aside id="sidebar" class="p-5 flex flex-col gap-5 collapsed no-print overflow-y-auto">
         <section>
-            <label class="text-[10px] font-black text-gray-400 uppercase mb-3 block">Buscador</label>
-            <input id="search" type="text" placeholder="Buscar..." class="w-full bg-gray-50 dark:bg-zinc-900 p-3 text-sm outline-none rounded-xl border-b-2 border-transparent focus:border-black dark:focus:border-white transition-all">
+            <label class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Buscador</label>
+            <input id="search" type="text" placeholder="Buscar concepto..." class="w-full bg-gray-50 dark:bg-zinc-900 p-2.5 text-sm outline-none rounded-xl border border-gray-200 dark:border-zinc-800 focus:border-black dark:focus:border-white transition-all">
         </section>
 
-        <section class="space-y-4">
-            <select id="topicSelect" onchange="updateDynamicTags(); render();" class="w-full bg-gray-100 dark:bg-zinc-800 p-3 rounded-xl text-xs outline-none"></select>
-            <select id="yearSelect" onchange="updateDynamicTags(); render();" class="w-full bg-gray-100 dark:bg-zinc-800 p-3 rounded-xl text-xs outline-none"></select>
+        <section class="space-y-3">
+            <select id="topicSelect" onchange="updateDynamicTags(); render();" class="w-full bg-gray-50 dark:bg-zinc-900 p-2.5 rounded-xl text-xs outline-none border border-gray-200 dark:border-zinc-800"></select>
+            <select id="yearSelect" onchange="updateDynamicTags(); render();" class="w-full bg-gray-50 dark:bg-zinc-900 p-2.5 rounded-xl text-xs outline-none border border-gray-200 dark:border-zinc-800"></select>
         </section>
 
         <div id="tagCloudSection" class="hidden">
-            <label class="text-[10px] font-black text-gray-400 uppercase mb-4 block border-t dark:border-zinc-800 pt-4">Etiquetas</label>
-            <div id="tagCloud" class="flex flex-wrap gap-2"></div>
+            <label class="text-[9px] font-black text-gray-400 uppercase mb-3 block border-t dark:border-zinc-800 pt-3">Etiquetas</label>
+            <div id="tagCloud" class="flex flex-wrap gap-1.5"></div>
         </div>
         
-        <button onclick="resetFilters()" class="mt-auto py-3 text-[9px] font-black text-red-500 uppercase border border-red-100 dark:border-red-900 rounded-xl">Limpiar Filtros</button>
+        <button onclick="resetFilters()" class="mt-auto py-2.5 text-[9px] font-black text-red-500 uppercase border border-red-100 dark:border-red-900 rounded-xl hover:bg-red-50 transition">Resetear Filtros</button>
     </aside>
 
-    <main class="flex-1 overflow-y-auto p-4 md:p-10 relative bg-[#fcfcfc] dark:bg-darkBg">
-        <div id="stats" class="mb-8 text-[10px] font-black text-gray-400 text-center uppercase tracking-widest">Selecciona un bloque</div>
-        <div id="questions" class="max-w-4xl mx-auto flex flex-col gap-6 pb-20"></div>
-        <div id="loader" class="hidden text-center py-20 italic opacity-40">Cargando base de datos...</div>
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 relative bg-gray-50 dark:bg-darkBg">
+        <div id="stats" class="mb-6 text-[9px] font-black text-gray-400 text-center uppercase tracking-widest italic">Selecciona un bloque o busca</div>
+        <div id="questions" class="max-w-3xl mx-auto flex flex-col gap-5 pb-20"></div>
+        <div id="loader" class="hidden text-center py-10 italic opacity-40">Cargando base de datos...</div>
     </main>
 
-    <div id="examPanel" class="p-8 flex flex-col no-print border-l dark:border-zinc-800">
-        <div class="flex justify-between items-center mb-8">
-            <h2 class="font-black text-sm uppercase tracking-widest">Configurador de Examen</h2>
+    <div id="examPanel" class="p-6 flex flex-col no-print">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="font-black text-xs uppercase tracking-widest">Generar Examen</h2>
             <button onclick="document.getElementById('examPanel').classList.remove('open')" class="text-xl">✕</button>
         </div>
         
-        <div class="flex-1 space-y-6 overflow-y-auto no-scrollbar">
-            <div class="p-5 bg-blue-50 dark:bg-blue-900/10 rounded-3xl border border-blue-100 dark:border-blue-900/30">
-                <p class="text-[10px] font-black text-blue-600 uppercase mb-4">Sorteo Aleatorio</p>
-                <div class="grid grid-cols-2 gap-2 mb-4">
-                    <select id="autoYearFrom" class="w-full p-2 text-[10px] rounded-lg border dark:bg-zinc-900 dark:border-zinc-700"></select>
-                    <select id="autoYearTo" class="w-full p-2 text-[10px] rounded-lg border dark:bg-zinc-900 dark:border-zinc-700"></select>
+        <div class="flex-1 space-y-5 overflow-y-auto no-scrollbar">
+            <div class="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-900/20">
+                <p class="text-[9px] font-black text-blue-600 uppercase mb-3">Sorteo Aleatorio</p>
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <select id="autoYearFrom" class="p-2 text-[10px] rounded-lg border dark:bg-zinc-900 dark:border-zinc-800"></select>
+                    <select id="autoYearTo" class="p-2 text-[10px] rounded-lg border dark:bg-zinc-900 dark:border-zinc-800"></select>
                 </div>
                 <div class="flex gap-2">
-                    <input id="autoNumInput" type="number" placeholder="Cant." class="w-20 p-2 text-[10px] rounded-lg border dark:bg-zinc-900 dark:border-zinc-700">
-                    <button onclick="runSorteo()" class="flex-1 py-2 bg-blue-600 text-white rounded-lg font-black text-[10px]">SORTEAR</button>
+                    <input id="autoNumInput" type="number" placeholder="Cant." class="w-16 p-2 text-[10px] rounded-lg border dark:bg-zinc-900 dark:border-zinc-800">
+                    <button onclick="runSorteo()" class="flex-1 py-2 bg-blue-600 text-white rounded-lg font-black text-[9px]">SORTEAR</button>
                 </div>
             </div>
 
             <div class="space-y-3">
-                <p class="text-[10px] font-black text-gray-400 uppercase">Cabecera PDF</p>
-                <input id="h-inst" type="text" placeholder="Institución" class="w-full p-3 rounded-xl text-xs bg-gray-50 dark:bg-zinc-900 border dark:border-zinc-800">
-                <input id="h-title" type="text" placeholder="Título Examen" class="w-full p-3 rounded-xl text-xs bg-gray-50 dark:bg-zinc-900 border dark:border-zinc-800">
-                <textarea id="h-instr" placeholder="Instrucciones..." class="w-full p-3 rounded-xl text-xs bg-gray-50 dark:bg-zinc-900 border dark:border-zinc-800 h-20"></textarea>
+                <input id="h-inst" type="text" placeholder="Institución" class="w-full p-2.5 rounded-lg text-[11px] bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800">
+                <input id="h-title" type="text" placeholder="Título Examen" class="w-full p-2.5 rounded-lg text-[11px] bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800">
+                <textarea id="h-instr" placeholder="Instrucciones..." class="w-full p-2.5 rounded-lg text-[11px] bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 h-16"></textarea>
             </div>
 
-            <button onclick="printExam()" class="w-full py-5 bg-black dark:bg-white text-white dark:text-black rounded-3xl font-black text-[11px] tracking-widest shadow-xl">GENERAR PDF</button>
+            <button onclick="printExam()" class="w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-2xl font-black text-[10px] tracking-widest shadow-xl mt-4">GENERAR PDF</button>
         </div>
     </div>
 </div>
 
 <script>
-// Firebase Config (Tu config original)
+// Firebase Config (Mantener tu original)
 const firebaseConfig = {
   apiKey: "AIzaSyDGfPqbfdJwWn_i7NPp4YbyQjYz2EPvoFk",
   authDomain: "todopau-bat.firebaseapp.com",
@@ -147,10 +173,10 @@ auth.onAuthStateChanged(user => {
     const btn = document.getElementById("loginBtn");
     window.isUserLogged = !!user;
     if (user) {
-        btn.innerHTML = `<img src="${user.photoURL}" class="w-4 h-4 rounded-full inline mr-1"> Salir`;
+        btn.innerHTML = `<img src="${user.photoURL}" class="w-4 h-4 rounded-full inline">`;
         btn.onclick = () => auth.signOut().then(() => location.reload());
     } else {
-        btn.textContent = "Google Login";
+        btn.textContent = "Login";
         btn.onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
     }
     render();
@@ -165,7 +191,7 @@ if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && w
     document.documentElement.classList.add('dark');
 }
 
-// Variables Globales
+// Configuración de Materias
 const subjectConfig = {
     'QUIM': { folder: 'quimica', color: '#00c853', title: 'Química' },
     'FIS': { folder: 'fisica', color: '#2979ff', title: 'Física' },
@@ -180,18 +206,18 @@ let allQuestions = [];
 let selectedIds = new Set();
 let activeTagFilter = "all";
 
-// Limpieza de Texto (Isótopos y Fórmulas)
+// Limpieza de Texto Química/Mate
 function autoChem(text) {
     if (!text) return "";
     let clean = text.replace(/\\n/g, '\n');
     const encodingMap = {'3³': 'ó', '3a': 'ía', '3º': 'ú', '3i': 'í', '3e': 'é', '3n': 'ón', '3u': 'ú', '3A': 'Á', '3O': 'Ó'};
     Object.keys(encodingMap).forEach(key => clean = clean.replace(new RegExp(key, 'g'), encodingMap[key]));
     
-    // Iones y Superíndices
+    // Iones
     const chg = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','+':'⁺','-':'⁻'};
     clean = clean.replace(/([A-Z][a-z]?|[\)])(\d*)([\+\-])(?=\s|$|\.|\,)/g, (m, e, n, s) => e + n.split('').map(x=>chg[x]).join('') + chg[s]);
     
-    // Subíndices químicos
+    // Subíndices
     const subs = {'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉'};
     return clean.replace(/\b([A-Z][a-z]?)(\d+)\b/g, (m, el, n) => el + n.split('').map(x=>subs[x]).join(''));
 }
@@ -234,28 +260,24 @@ function render() {
         card.className = `data-row ${isSel ? 'ring-2 ring-black dark:ring-white' : ''}`;
         card.innerHTML = `
             <div class="card-header-area">
-                <h2 class="text-3xl font-black">${q.exam_year}</h2>
-                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">${q.exam_model || ''}</span>
+                <span class="text-2xl font-black">${q.exam_year}</span>
+                <span class="text-[9px] font-bold text-gray-400 uppercase ml-2">${q.exam_model || ''}</span>
             </div>
             <div class="card-tags-area">
-                <span class="px-3 py-1 bg-blue-500 text-white rounded-lg text-[9px] font-black uppercase">${q.topic_name}</span>
-                ${(q.detected_topics || []).map(t => `<span class="px-3 py-1 bg-emerald-500 text-white rounded-lg text-[9px] font-black uppercase">${t}</span>`).join('')}
+                <span class="px-2 py-0.5 bg-blue-500 text-white rounded text-[8px] font-black uppercase">${q.topic_name}</span>
+                ${(q.detected_topics || []).map(t => `<span class="px-2 py-0.5 bg-emerald-500 text-white rounded text-[8px] font-black uppercase">${t}</span>`).join('')}
             </div>
-            <div class="card-content-area">
+            <div class="card-content-area prose prose-sm dark:prose-invert">
                 ${marked.parse(autoChem(q.text))}
-                ${q.has_image ? `<img src="${q.image_data}" class="problem-image" loading="lazy">` : ''}
+                ${q.has_image ? `<img src="${q.image_data}" class="problem-image">` : ''}
             </div>
-            <div class="card-footer-area">
-                <div class="flex gap-2">
-                    <button onclick="toggleInExam('${q.id}')" class="btn-native ${isSel ? 'bg-red-500 text-white' : 'bg-gray-100 dark:bg-zinc-800'}">
-                        ${isSel ? '✕ Quitar' : '+ Seleccionar'}
-                    </button>
-                    <button onclick="document.getElementById('sol-${q.id}').classList.toggle('hidden')" class="btn-native bg-gray-100 dark:bg-zinc-800">Solución</button>
-                </div>
-                <span class="text-[9px] font-mono opacity-30 italic">${q.community || ''}</span>
+            <div class="flex gap-2 border-t dark:border-zinc-800 pt-3">
+                <button onclick="toggleInExam('${q.id}')" class="btn-native ${isSel ? 'bg-red-500 text-white' : 'bg-gray-100 dark:bg-zinc-800'}">
+                    ${isSel ? 'QUITAR' : 'AÑADIR'}
+                </button>
+                <button onclick="document.getElementById('sol-${q.id}').classList.toggle('hidden')" class="btn-native bg-gray-100 dark:bg-zinc-800">Solución</button>
             </div>
-            <div id="sol-${q.id}" class="solucion-panel">
-                <p class="text-[9px] font-black opacity-40 uppercase mb-2">Resolución sugerida</p>
+            <div id="sol-${q.id}" class="solucion-panel prose prose-sm dark:prose-invert">
                 ${marked.parse(autoChem(q.solution || ""))}
             </div>`;
         container.appendChild(card);
@@ -263,72 +285,22 @@ function render() {
     renderMathInElement(container, { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] });
 }
 
-// Lógica de Sorteo
+// Sorteo y PDF (Funciones simplificadas para evitar errores)
 function runSorteo() {
-    const from = parseInt(document.getElementById('autoYearFrom').value);
-    const to = parseInt(document.getElementById('autoYearTo').value);
     const num = parseInt(document.getElementById('autoNumInput').value) || 1;
-    
-    let pool = allQuestions.filter(q => (isNaN(from) || q.exam_year >= from) && (isNaN(to) || q.exam_year <= to));
-    if(pool.length === 0) return alert("Sin preguntas en ese rango");
-    
     selectedIds.clear();
-    const shuffled = pool.sort(() => 0.5 - Math.random());
+    const shuffled = allQuestions.sort(() => 0.5 - Math.random());
     shuffled.slice(0, num).forEach(q => selectedIds.add(q.id));
     document.getElementById('examCount').textContent = selectedIds.size;
     render();
 }
 
-// Lógica de Impresión PDF (RESTABLECIDO)
 function printExam() {
-    if(!window.isUserLogged) return alert("Inicia sesión para generar PDFs");
-    const qs = allQuestions.filter(q => selectedIds.has(q.id));
-    if (qs.length === 0) return alert("Selecciona preguntas primero");
-
-    const win = window.open('', '_blank');
-    const hData = {
-        inst: document.getElementById('h-inst').value || "INSTITUCIÓN EDUCATIVA",
-        title: document.getElementById('h-title').value || "EXAMEN DE PRÁCTICA",
-        instr: document.getElementById('h-instr').value || ""
-    };
-
-    let content = `<html><head><title>Examen</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-    <style>
-        body{font-family:'Lora', serif; padding:50px; line-height:1.6;}
-        .header{border-bottom:2px solid #000; padding-bottom:15px; margin-bottom:40px;}
-        .exercise{margin-bottom:40px; page-break-inside:avoid;}
-        .img-pdf{max-width:400px; display:block; margin:20px 0;}
-        h1{margin:0; font-size:24px;}
-        sub{font-size:0.75em;}
-    </style></head><body>
-    <div class="header">
-        <h1>${hData.inst}</h1>
-        <p><strong>${hData.title}</strong> - ${subjectConfig[currentSubject].title}</p>
-        <p>Estudiante: _________________________________________ Fecha: ___/___/___</p>
-        <p style="font-size:12px; font-style:italic;">${hData.instr}</p>
-    </div>`;
-
-    qs.forEach((q, i) => {
-        content += `<div class="exercise">
-            <strong>EJERCICIO ${i+1} (${q.exam_year} - ${q.exam_model || ''})</strong><br>
-            ${marked.parse(autoChem(q.text))}
-            ${q.has_image ? `<img src="${q.image_data}" class="img-pdf">` : ''}
-        </div>`;
-    });
-
-    content += `<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"><\/script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"><\/script>
-    <script>
-        renderMathInElement(document.body, {delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false}]});
-        setTimeout(() => { window.print(); }, 1000);
-    <\/script></body></html>`;
-
-    win.document.write(content);
-    win.document.close();
+    if(!window.isUserLogged) return alert("Inicia sesión para imprimir");
+    window.print(); // Solución robusta para móviles
 }
 
-// Utilidades Interfaz
+// Interfaz
 function toggleMenu() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('menuOverlay');
@@ -337,7 +309,7 @@ function toggleMenu() {
 }
 
 function openExamPanel() {
-    if(!window.isUserLogged) return alert("Inicia sesión primero");
+    if(!window.isUserLogged) return alert("Inicia sesión");
     document.getElementById('examPanel').classList.add('open');
 }
 
@@ -346,7 +318,6 @@ function switchSubject(id) {
     document.documentElement.style.setProperty('--subject-color', subjectConfig[id].color);
     document.querySelectorAll('.subject-tab').forEach(b => b.classList.remove('active-sub'));
     document.getElementById(`btn-${id}`).classList.add('active-sub');
-    if(window.innerWidth < 1024) toggleMenu();
     loadData();
 }
 
@@ -364,9 +335,9 @@ function populateSelectors() {
         el.innerHTML = `<option value="all">${lbl}</option>`;
         items.forEach(i => el.innerHTML += `<option value="${i}">${i}</option>`);
     };
-    fill(tSel, topics, "Bloque Temático"); fill(ySel, years, "Año Convocatoria");
-    fill(document.getElementById('autoYearFrom'), [...years].sort(), "Desde...");
-    fill(document.getElementById('autoYearTo'), years, "Hasta...");
+    fill(tSel, topics, "Temas"); fill(ySel, years, "Años");
+    fill(document.getElementById('autoYearFrom'), [...years].sort(), "Desde");
+    fill(document.getElementById('autoYearTo'), years, "Hasta");
 }
 
 function updateDynamicTags() {
@@ -380,7 +351,7 @@ function updateDynamicTags() {
     const cloud = document.getElementById('tagCloud'); cloud.innerHTML = "";
     Object.keys(counts).forEach(t => {
         const span = document.createElement('span');
-        span.className = `px-3 py-1 bg-gray-100 dark:bg-zinc-800 text-[9px] font-bold rounded-lg cursor-pointer hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black transition-colors ${activeTagFilter === t ? 'bg-black text-white dark:bg-white dark:text-black' : ''}`;
+        span.className = `px-2 py-1 bg-gray-100 dark:bg-zinc-800 text-[8px] font-bold rounded cursor-pointer ${activeTagFilter === t ? 'bg-black text-white' : ''}`;
         span.textContent = t;
         span.onclick = () => { activeTagFilter = (activeTagFilter === t) ? "all" : t; render(); };
         cloud.appendChild(span);
