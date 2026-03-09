@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PEvAU-DB | TodoPAU v6.4</title>
+    <title>PEvAU-DB | TodoPAU v6.5</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -44,7 +44,7 @@
             #sidebar.collapsed { width: 0; overflow: hidden; border: none; }
         }
 
-        /* GRID RESPONSIVO: Enunciado (izq) y Tags (der) */
+        /* GRID RESPONSIVO */
         .data-row { 
             display: grid; grid-template-columns: 1fr; 
             grid-template-areas: "header" "content" "tags" "solution" "footer"; 
@@ -67,8 +67,9 @@
         .solucion-panel { grid-area: solution; }
         .card-footer-area { grid-area: footer; }
 
-        .btn-app { @apply px-4 py-2 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all active:scale-95; }
-        .btn-sol-active { background: var(--subject-color) !important; color: white !important; }
+        /* Botones unificados */
+        .btn-app { @apply px-4 py-2 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all active:scale-95; border: 1px solid transparent; }
+        .btn-sol-active { background: var(--subject-color) !important; color: white !important; border-radius: 0.75rem !important; }
         
         #rightPanel { width: 320px; background: white; border-left: 1px solid #eee; padding: 1.5rem; overflow-y: auto; }
         .dark #rightPanel { background: #121212; border-color: #333; }
@@ -109,7 +110,7 @@
     
     <aside id="sidebar" class="no-print p-6 flex flex-col gap-5 overflow-y-auto collapsed">
         <section>
-            <label class="text-[10px] uppercase font-bold text-gray-400 mb-2 block">Buscador</label>
+            <label class="text-[10px] uppercase font-bold text-gray-400 mb-2 block tracking-widest">Buscador</label>
             <input id="search" type="text" placeholder="Concepto..." class="w-full bg-transparent border-b p-2 text-sm outline-none dark:border-zinc-700">
         </section>
 
@@ -121,16 +122,16 @@
                     <select id="autoYearFrom-mob" class="border rounded p-2 text-[10px] dark:bg-zinc-900"></select>
                     <select id="autoYearTo-mob" class="border rounded p-2 text-[10px] dark:bg-zinc-900"></select>
                 </div>
-                <button onclick="runSorteo('mob')" class="w-full py-2 bg-blue-600 text-white rounded-lg font-black text-[9px]">SORTEAR</button>
-                <button onclick="printExam('mob')" class="w-full py-2 bg-black text-white dark:bg-white dark:text-black rounded-lg font-black text-[9px]">GENERAR PDF</button>
+                <button onclick="runSorteo('mob')" class="w-full py-2 bg-blue-600 text-white rounded-xl font-black text-[9px]">SORTEAR</button>
+                <button onclick="printExam('mob')" class="w-full py-2 bg-black text-white dark:bg-white dark:text-black rounded-xl font-black text-[9px]">GENERAR PDF</button>
             </div>
         </details>
 
         <section class="space-y-3">
             <select id="topicSelect" onchange="updateDynamicTags(); render();" class="w-full border rounded-xl p-2 text-xs bg-gray-50 dark:bg-zinc-800 dark:border-zinc-700 outline-none"></select>
-            <select id="yearSelect" onchange="updateDynamicTags(); render();" class="w-full border rounded-xl p-2 text-xs bg-gray-50 dark:bg-zinc-800 dark:border-zinc-700 outline-none"></select>
-            <select id="modelSelect" onchange="render();" class="w-full border rounded-xl p-2 text-xs bg-gray-50 dark:bg-zinc-800 dark:border-zinc-700 outline-none">
-                <option value="all">Modelo: Todos</option>
+            <select id="yearSelect" onchange="handleYearChange();" class="w-full border rounded-xl p-2 text-xs bg-gray-50 dark:bg-zinc-800 dark:border-zinc-700 outline-none"></select>
+            <select id="modelSelect" onchange="render();" class="w-full border rounded-xl p-2 text-xs bg-gray-50 dark:bg-zinc-800 dark:border-zinc-700 outline-none" disabled>
+                <option value="all">Modelo: Elige año primero</option>
             </select>
         </section>
 
@@ -294,6 +295,26 @@ function render() {
     renderMathInElement(container, { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] });
 }
 
+// LOGICA DE FILTRO DEPENDIENTE (AÑO -> MODELO)
+function handleYearChange() {
+    const year = document.getElementById('yearSelect').value;
+    const mSel = document.getElementById('modelSelect');
+    
+    if (year === 'all') {
+        mSel.innerHTML = '<option value="all">Modelo: Elige año primero</option>';
+        mSel.disabled = true;
+    } else {
+        const availableModels = [...new Set(allQuestions.filter(q => q.exam_year == year).map(q => q.exam_model))].sort();
+        mSel.innerHTML = '<option value="all">Modelo: Todos</option>';
+        availableModels.forEach(m => {
+            mSel.innerHTML += `<option value="${m}">${m}</option>`;
+        });
+        mSel.disabled = false;
+    }
+    updateDynamicTags();
+    render();
+}
+
 function toggleSol(id) {
     if(!window.isUserLogged) return alert("Inicia sesión primero");
     document.getElementById(`sol-${id}`).classList.toggle('hidden');
@@ -315,18 +336,20 @@ function switchSubject(id) {
 }
 
 function populateSelectors() {
-    const tSel = document.getElementById('topicSelect'), ySel = document.getElementById('yearSelect'), mSel = document.getElementById('modelSelect');
+    const tSel = document.getElementById('topicSelect'), ySel = document.getElementById('yearSelect');
     const topics = [...new Set(allQuestions.map(q => q.topic_name))].sort();
     const years = [...new Set(allQuestions.map(q => q.exam_year))].sort((a,b)=>b-a);
-    const models = [...new Set(allQuestions.map(q => q.exam_model))].sort();
+
     const fill = (el, items, lbl) => {
         el.innerHTML = `<option value="all">${lbl}</option>`;
         items.forEach(i => el.innerHTML += `<option value="${i}">${i}</option>`);
     };
-    fill(tSel, topics, "Temas..."); fill(ySel, years, "Años..."); fill(mSel, models, "Modelos...");
-    fill(document.getElementById('autoYearFrom'), [...years].sort(), "Desde...");
+    fill(tSel, topics, "Temas..."); fill(ySel, years, "Años...");
+    
+    const sortedYears = [...years].sort();
+    fill(document.getElementById('autoYearFrom'), sortedYears, "Desde...");
     fill(document.getElementById('autoYearTo'), years, "Hasta...");
-    fill(document.getElementById('autoYearFrom-mob'), [...years].sort(), "Desde...");
+    fill(document.getElementById('autoYearFrom-mob'), sortedYears, "Desde...");
     fill(document.getElementById('autoYearTo-mob'), years, "Hasta...");
 }
 
@@ -367,7 +390,7 @@ function updateDynamicTags() {
 
 function resetFilters() {
     document.getElementById('search').value = ""; document.getElementById('topicSelect').value = "all";
-    document.getElementById('yearSelect').value = "all"; document.getElementById('modelSelect').value = "all";
+    document.getElementById('yearSelect').value = "all"; handleYearChange();
     activeTagFilter = "all"; render();
 }
 
