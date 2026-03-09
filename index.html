@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PEvAU-DB | TodoPAU v6.8</title>
+    <title>PEvAU-DB | TodoPAU v6.9</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -24,23 +24,28 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Lora:italic,wght@400;600&display=swap');
         :root { --subject-color: #000000; }
-        body { @apply bg-gray-50 dark:bg-darkBg font-sans transition-colors duration-300 overflow-x-hidden; }
+        body { @apply bg-gray-50 dark:bg-darkBg font-sans transition-colors duration-300 overflow-x-hidden h-screen flex flex-col; }
         
-        .glass-header { @apply sticky top-0 z-50 flex items-center justify-between h-[70px] px-4 border-b bg-white/80 dark:bg-darkBg/80 backdrop-blur-md dark:border-zinc-800; }
+        .glass-header { @apply sticky top-0 z-50 flex items-center justify-between h-[70px] px-4 border-b bg-white/80 dark:bg-darkBg/80 backdrop-blur-md dark:border-zinc-800 flex-shrink-0; }
         .subject-nav { @apply flex flex-1 items-center gap-2 mx-4 overflow-x-auto no-scrollbar; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
         .subject-tab { @apply flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold text-gray-500 cursor-pointer transition-all; }
         .subject-tab.active-sub { @apply bg-white dark:bg-zinc-800 shadow-sm border dark:border-zinc-700; color: var(--subject-color); }
 
-        #sidebar { @apply fixed lg:relative top-[70px] lg:top-0 h-[calc(100vh-70px)] lg:h-auto w-[280px] bg-white dark:bg-darkBg border-r dark:border-zinc-800 z-40 transition-transform duration-300; }
+        #sidebar { @apply fixed lg:relative top-[70px] lg:top-0 h-[calc(100vh-70px)] lg:h-auto w-[280px] bg-white dark:bg-darkBg border-r dark:border-zinc-800 z-40 transition-transform duration-300 flex-shrink-0; }
         #sidebar.collapsed { transform: translateX(-100%); }
 
-        #rightPanel { @apply hidden lg:flex flex-col w-[320px] bg-white dark:bg-darkBg border-l dark:border-zinc-800 p-6 overflow-y-auto transition-all duration-300; }
+        #rightPanel { @apply hidden lg:flex flex-col w-[320px] bg-white dark:bg-darkBg border-l dark:border-zinc-800 p-6 overflow-y-auto transition-all duration-300 flex-shrink-0; }
         #rightPanel.collapsed { @apply w-0 p-0 overflow-hidden border-none; }
 
         .data-row { @apply bg-white dark:bg-darkCard border dark:border-zinc-800 rounded-3xl p-6 shadow-sm mb-4; display: grid; grid-template-columns: 1fr; gap: 1rem; }
         @media (min-width: 768px) { .data-row { grid-template-columns: 1fr 220px; grid-template-areas: "header tags" "content tags" "footer footer" "solution solution"; } }
+        
+        .card-header-area { grid-area: header; }
+        .card-content-area { grid-area: content; align-self: start; }
+        .card-tags-area { grid-area: tags; display: flex; flex-wrap: wrap; gap: 0.4rem; align-self: start; }
+        @media (min-width: 768px) { .card-tags-area { flex-direction: column; align-items: flex-end; } }
         
         .btn-app { @apply px-4 py-2 rounded-xl font-bold text-[10px] uppercase tracking-wider active:scale-95 transition-all; }
         .btn-sol-active { background: var(--subject-color) !important; color: white !important; }
@@ -73,30 +78,43 @@
 
     <div class="flex items-center gap-2">
         <button onclick="toggleDarkMode()" class="p-2 rounded-xl">🌙</button>
-        <div id="userArea" class="flex items-center gap-2">
-            <button id="loginBtn" class="bg-black text-white dark:bg-white dark:text-black px-4 py-2 rounded-xl text-[10px] font-bold">ENTRAR</button>
-        </div>
+        <button id="loginBtn" class="bg-black text-white dark:bg-white dark:text-black px-4 py-2 rounded-xl text-[10px] font-bold">ENTRAR</button>
         <button id="panelToggleBtn" onclick="toggleRightPanel()" class="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg hidden lg:block">
             <svg id="panelArrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
         </button>
     </div>
 </header>
 
-<div class="flex h-[calc(100vh-70px)] overflow-hidden">
+<div class="flex flex-1 overflow-hidden relative">
     <aside id="sidebar" class="p-6 flex flex-col gap-6 collapsed no-print overflow-y-auto">
         <section>
             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Buscador</label>
             <input id="search" type="text" placeholder="Concepto..." class="w-full bg-gray-50 dark:bg-zinc-900 p-3 text-sm rounded-xl border dark:border-zinc-800 outline-none">
         </section>
 
-        <div id="requestPlanBox" class="hidden bg-gradient-to-br from-blue-500 to-indigo-600 p-4 rounded-2xl text-white shadow-lg">
-            <p class="text-[9px] font-black uppercase mb-2">Mejorar Cuenta</p>
+        <details id="mobileGen" class="lg:hidden bg-blue-50/50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-100 dark:border-blue-800">
+            <summary class="text-[10px] font-black text-blue-800 dark:text-blue-300 uppercase cursor-pointer">Generador de Examen</summary>
+            <div class="pt-4 space-y-3">
+                <input id="h-inst-mob" type="text" placeholder="Institución" class="w-full p-2 text-[10px] rounded border dark:bg-zinc-900">
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="autoYearFrom-mob" class="border rounded p-2 text-[10px] dark:bg-zinc-900"></select>
+                    <select id="autoYearTo-mob" class="border rounded p-2 text-[10px] dark:bg-zinc-900"></select>
+                </div>
+                <button onclick="runSorteo('mob')" class="w-full py-2 bg-blue-600 text-white rounded-xl font-black text-[9px]">SORTEAR</button>
+                <button onclick="printExam()" class="w-full py-2 bg-black text-white dark:bg-white dark:text-black rounded-xl font-black text-[9px]">GENERAR PDF</button>
+            </div>
+        </details>
+
+        <button id="adminBtnMob" onclick="toggleAdminPanel()" class="hidden w-full py-3 border-2 border-dashed border-red-200 text-red-400 rounded-2xl font-black text-[9px] uppercase">Administración</button>
+
+        <div id="requestPlanBox" class="hidden bg-indigo-600 p-4 rounded-2xl text-white">
+            <p class="text-[9px] font-black uppercase mb-2">Solicitar Versión</p>
             <select id="requestedPlan" class="w-full bg-white/20 border-none rounded-lg p-2 text-xs mb-2 outline-none">
-                <option value="estudiante">Plan Estudiante</option>
-                <option value="pro">Plan Estudiante PRO</option>
+                <option value="estudiante">Estudiante</option>
+                <option value="pro">Estudiante PRO</option>
                 <option value="docente">Plan Docente</option>
             </select>
-            <button onclick="sendPlanRequest()" class="w-full py-2 bg-white text-blue-600 rounded-lg font-black text-[9px]">SOLICITAR ACCESO</button>
+            <button onclick="sendPlanRequest()" class="w-full py-2 bg-white text-indigo-600 rounded-lg font-black text-[9px]">SOLICITAR</button>
         </div>
 
         <section class="space-y-4">
@@ -111,17 +129,16 @@
             <label class="text-[10px] font-black text-gray-400 uppercase mb-3 block border-t dark:border-zinc-800 pt-3">Etiquetas</label>
             <div id="tagCloud" class="flex flex-wrap gap-2"></div>
         </div>
-
-        <button id="adminBtnMob" onclick="toggleAdminPanel()" class="hidden w-full py-3 border-2 border-dashed border-red-200 text-red-400 rounded-2xl font-black text-[9px] uppercase">Administración</button>
+        <button onclick="resetFilters()" class="w-full py-2 text-red-500 text-[9px] font-black uppercase">Limpiar Filtros</button>
     </aside>
 
-    <main class="flex-1 overflow-y-auto p-4 md:p-10 relative bg-[#fcfcfc] dark:bg-darkBg custom-scroll">
-        <div id="emptyState" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-10 transition-opacity">
+    <main class="flex-1 overflow-y-auto p-4 md:p-10 relative bg-[#fcfcfc] dark:bg-darkBg custom-scroll flex flex-col items-center">
+        <div id="emptyState" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-10">
             <img id="placeholder-icon" src="https://img.icons8.com/fluency/240/test-tube.png" class="w-48 md:w-64 mb-4">
             <p class="text-xl font-black uppercase tracking-[0.3em]">TodoPAU</p>
         </div>
 
-        <div id="questions" class="max-w-4xl mx-auto flex flex-col gap-6 relative z-10"></div>
+        <div id="questions" class="w-full max-w-4xl flex flex-col gap-6 relative z-10"></div>
         <div id="loader" class="hidden text-center py-20 italic opacity-40">Cargando base de datos...</div>
     </main>
 
@@ -129,39 +146,36 @@
         <h3 class="font-black text-xs uppercase tracking-widest mb-6">Configurador PDF</h3>
         <div class="space-y-6">
             <div class="space-y-2">
-                <input id="h-inst" type="text" placeholder="Centro Educativo" class="w-full p-3 rounded-xl border dark:bg-zinc-900 dark:border-zinc-800 text-xs outline-none">
-                <input id="h-title" type="text" placeholder="Título del Examen" class="w-full p-3 rounded-xl border dark:bg-zinc-900 dark:border-zinc-800 text-xs outline-none">
+                <input id="h-inst" type="text" placeholder="Centro Educativo" class="w-full p-3 rounded-xl border dark:bg-zinc-900 text-xs outline-none">
+                <input id="h-title" type="text" placeholder="Título del Examen" class="w-full p-3 rounded-xl border dark:bg-zinc-900 text-xs outline-none">
             </div>
-            <div class="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/20">
+            <div class="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-100">
                 <p class="text-[9px] font-black text-blue-600 uppercase mb-3 text-center">Sorteo Aleatorio</p>
                 <div class="grid grid-cols-2 gap-2 mb-3">
                     <select id="autoYearFrom" class="p-2 text-[10px] rounded-lg border dark:bg-zinc-800"></select>
                     <select id="autoYearTo" class="p-2 text-[10px] rounded-lg border dark:bg-zinc-800"></select>
                 </div>
-                <button onclick="runSorteo()" class="w-full py-2 bg-blue-600 text-white rounded-lg font-black text-[9px]">SORTEAR</button>
+                <button onclick="runSorteo('pc')" class="w-full py-2 bg-blue-600 text-white rounded-lg font-black text-[9px]">SORTEAR</button>
             </div>
-            <button onclick="printExam()" class="w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-2xl font-black text-[10px] tracking-widest shadow-xl uppercase">Generar PDF</button>
+            <button onclick="printExam()" class="w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-2xl font-black text-[10px] tracking-widest uppercase">Generar PDF</button>
             <button id="adminBtnPC" onclick="toggleAdminPanel()" class="hidden w-full py-3 border-2 border-dashed border-red-200 text-red-400 rounded-2xl font-black text-[9px] uppercase">Panel Admin</button>
         </div>
     </aside>
 </div>
 
 <div id="adminPanel" class="fixed inset-0 bg-black/80 z-[200] hidden flex items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white dark:bg-darkCard w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="bg-white dark:bg-darkCard w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl flex flex-col max-h-[80vh]">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="font-black text-xl uppercase italic">Solicitudes Pendientes</h2>
+            <h2 class="font-black text-xl uppercase italic">Solicitudes</h2>
             <button onclick="toggleAdminPanel()" class="p-2">✕</button>
         </div>
-        
-        <div id="requestList" class="flex-1 overflow-y-auto space-y-3 pr-2 custom-scroll">
-            <p class="text-xs text-gray-400 text-center italic">Cargando solicitudes...</p>
-        </div>
+        <div id="requestList" class="flex-1 overflow-y-auto space-y-3 pr-2"></div>
     </div>
 </div>
 
 <script>
-// --- CONFIGURACIÓN ---
-const MY_ADMIN_EMAIL = "TU_CORREO_AQUÍ@gmail.com"; // CAMBIA ESTO
+// --- CONFIGURACIÓN ADMIN ---
+const MY_ADMIN_EMAIL = "TU_CORREO_AQUÍ@gmail.com";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDGfPqbfdJwWn_i7NPp4YbyQjYz2EPvoFk",
@@ -173,66 +187,122 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// --- AUTH & PERMISOS ---
+let currentSubject = "QUIM";
+let allQuestions = [];
+let selectedIds = new Set();
+let activeTagFilter = "all";
+
+// --- AUTH ---
 auth.onAuthStateChanged(async user => {
-    const loginBtn = document.getElementById("loginBtn");
-    const requestBox = document.getElementById("requestPlanBox");
-    
+    const btn = document.getElementById("loginBtn");
+    const reqBox = document.getElementById("requestPlanBox");
     if (user) {
-        loginBtn.innerHTML = `<img src="${user.photoURL}" class="w-4 h-4 rounded-full inline mr-2"> SALIR`;
-        loginBtn.onclick = () => auth.signOut().then(() => location.reload());
-        requestBox.classList.remove('hidden');
-
+        btn.innerHTML = `<img src="${user.photoURL}" class="w-4 h-4 rounded-full inline mr-2"> SALIR`;
+        btn.onclick = () => auth.signOut().then(() => location.reload());
+        reqBox.classList.remove('hidden');
         const tokenResult = await user.getIdTokenResult();
-        const plan = tokenResult.claims.plan || 'basico';
-        window.currentUserPlan = plan;
-
-        // Mostrar botones admin solo si eres tú
+        window.currentUserPlan = tokenResult.claims.plan || 'basico';
         if (user.email === MY_ADMIN_EMAIL) {
             document.getElementById('adminBtnMob').classList.remove('hidden');
             document.getElementById('adminBtnPC').classList.remove('hidden');
         }
-        
-        // Mostrar panel docente solo si el plan lo permite
-        if (plan === 'docente') { toggleRightPanel(true); }
-
     } else {
-        loginBtn.textContent = "ENTRAR";
-        loginBtn.onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-        requestBox.classList.add('hidden');
+        btn.textContent = "ENTRAR";
+        btn.onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+        reqBox.classList.add('hidden');
         window.currentUserPlan = 'basico';
     }
+    loadData();
 });
 
-// --- LÓGICA DE SOLICITUDES ---
-function sendPlanRequest() {
-    const user = auth.currentUser;
-    const plan = document.getElementById('requestedPlan').value;
-    if (!user) return alert("Inicia sesión primero");
+// --- CORE ---
+async function loadData() {
+    const loader = document.getElementById('loader');
+    loader.classList.remove('hidden');
+    try {
+        let headers = {};
+        if (auth.currentUser) {
+            const token = await auth.currentUser.getIdToken();
+            headers = { 'Authorization': `Bearer ${token}` };
+        }
+        const config = { folder: { QUIM: 'quimica', FIS: 'fisica', MATII: 'matii', MACSII: 'macsii', TINII: 'tinii', DTECII: 'dtecii' }[currentSubject] };
+        const res = await fetch(`https://backend-todopau.onrender.com/api/${config.folder}/index`, { headers });
+        const idx = await res.json();
+        const promises = idx.topics.map(t => fetch(`https://backend-todopau.onrender.com/api/${config.folder}/file?name=${t.file}`, { headers }).then(r => r.json()));
+        allQuestions = (await Promise.all(promises)).flat();
+        populateSelectors();
+        loader.classList.add('hidden');
+        render();
+    } catch (e) { loader.classList.add('hidden'); }
+}
 
-    db.collection("requests").doc(user.uid).set({
-        email: user.email,
+function render() {
+    const container = document.getElementById('questions');
+    const empty = document.getElementById('emptyState');
+    const topic = document.getElementById('topicSelect').value;
+    const year = document.getElementById('yearSelect').value;
+    const term = document.getElementById('search').value.toLowerCase();
+
+    if (topic === 'all' && year === 'all' && term === "") {
+        container.innerHTML = "";
+        empty.style.opacity = "0.1";
+        return;
+    }
+
+    const filtered = allQuestions.filter(q => 
+        (q.text||"").toLowerCase().includes(term) && 
+        (topic==='all'||q.topic_name===topic) && 
+        (year==='all'||q.exam_year==year)
+    );
+
+    empty.style.opacity = "0";
+    container.innerHTML = "";
+    filtered.forEach(q => {
+        const hasSol = q.solution && q.solution.length > 5;
+        const card = document.createElement('div');
+        card.className = "data-row";
+        card.innerHTML = `
+            <div class="card-header-area"><h2 class="text-2xl font-black">${q.exam_year} <span class="text-[9px] text-gray-400 font-bold uppercase ml-2">${q.exam_model || ''}</span></h2></div>
+            <div class="card-content-area prose prose-sm dark:prose-invert">
+                ${marked.parse(cleanText(q.text))}
+                ${q.has_image ? `<img src="${q.image_data}" class="problem-image">` : ''}
+            </div>
+            <div class="card-tags-area">
+                <span class="px-3 py-1 bg-blue-500 text-white rounded-lg text-[8px] font-black uppercase">${q.topic_name}</span>
+                ${(q.detected_topics || []).map(t => `<span class="px-2 py-0.5 bg-emerald-500 text-white rounded text-[8px] font-black uppercase">${t}</span>`).join('')}
+            </div>
+            <div class="card-footer-area flex gap-2 border-t dark:border-zinc-800 pt-4">
+                <button onclick="toggleInExam('${q.id}')" class="btn-app bg-gray-100 dark:bg-zinc-800">AÑADIR</button>
+                <button onclick="toggleSol('${q.id}')" class="btn-app ${hasSol ? 'btn-sol-active' : 'opacity-30'}">SOLUCIÓN</button>
+            </div>
+            <div id="sol-${q.id}" class="solucion-panel hidden mt-4 p-5 bg-gray-50 dark:bg-zinc-900 rounded-2xl border-l-4 border-black dark:border-white">
+                ${marked.parse(cleanText(q.solution || ""))}
+            </div>`;
+        container.appendChild(card);
+    });
+    renderMathInElement(container, { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] });
+}
+
+// --- SOLICITUDES & ADMIN ---
+function sendPlanRequest() {
+    const plan = document.getElementById('requestedPlan').value;
+    db.collection("requests").doc(auth.currentUser.uid).set({
+        email: auth.currentUser.email,
         plan: plan,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => alert("Solicitud enviada al profesor."));
+    }).then(() => alert("Solicitud enviada."));
 }
 
 function loadRequests() {
     const list = document.getElementById('requestList');
     list.innerHTML = "";
     db.collection("requests").orderBy("timestamp", "desc").get().then(snap => {
-        if (snap.empty) list.innerHTML = "<p class='text-center py-10 opacity-30'>No hay solicitudes</p>";
         snap.forEach(doc => {
-            const req = doc.data();
+            const data = doc.data();
             const div = document.createElement('div');
             div.className = "p-4 bg-gray-50 dark:bg-zinc-800 rounded-2xl flex justify-between items-center";
-            div.innerHTML = `
-                <div>
-                    <p class="text-[11px] font-bold">${req.email}</p>
-                    <p class="text-[9px] text-blue-500 font-black uppercase">${req.plan}</p>
-                </div>
-                <button onclick="approveUser('${req.email}', '${req.plan}', '${doc.id}')" class="bg-black text-white px-4 py-2 rounded-xl text-[9px] font-black">APROBAR</button>
-            `;
+            div.innerHTML = `<div><p class="text-[10px] font-bold">${data.email}</p><p class="text-[8px] text-blue-500 font-black uppercase">${data.plan}</p></div>
+                             <button onclick="approveUser('${data.email}','${data.plan}','${doc.id}')" class="bg-black text-white px-4 py-2 rounded-xl text-[9px] font-black">APROBAR</button>`;
             list.appendChild(div);
         });
     });
@@ -241,114 +311,25 @@ function loadRequests() {
 async function approveUser(email, plan, docId) {
     const token = await auth.currentUser.getIdToken();
     fetch('https://backend-todopau.onrender.com/api/admin/set-plan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ email, plan })
-    }).then(res => {
-        if (res.ok) {
-            db.collection("requests").doc(docId).delete();
-            alert("Usuario actualizado");
-            loadRequests();
-        }
-    });
+    }).then(res => { if(res.ok) { db.collection("requests").doc(docId).delete(); loadRequests(); } });
 }
 
-// --- LÓGICA UI ---
+// --- UI HELPERS ---
+function toggleMenu() { document.getElementById('sidebar').classList.toggle('collapsed'); }
+function toggleRightPanel() { document.getElementById('rightPanel').classList.toggle('collapsed'); }
+function toggleAdminPanel() { document.getElementById('adminPanel').classList.toggle('hidden'); if(!document.getElementById('adminPanel').classList.contains('hidden')) loadRequests(); }
+function toggleDarkMode() { document.documentElement.classList.toggle('dark'); }
+function cleanText(t) { /* Tu motor de limpieza química/matemática anterior */ return t; }
 function switchSubject(id) {
-    const subjects = {
-        'QUIM': { icon: 'test-tube', color: '#00c853' },
-        'FIS': { icon: 'physics', color: '#2979ff' },
-        'MATII': { icon: 'math', color: '#651fff' },
-        'MACSII': { icon: 'line-chart', color: '#f50057' },
-        'TINII': { icon: 'circuit', color: '#ff9100' },
-        'DTECII': { icon: 'drafting-compass', color: '#455a64' }
-    };
-    
     currentSubject = id;
-    document.documentElement.style.setProperty('--subject-color', subjects[id].color);
-    document.getElementById('placeholder-icon').src = `https://img.icons8.com/fluency/240/${subjects[id].icon}.png`;
-    
-    document.querySelectorAll('.subject-tab').forEach(t => t.classList.remove('active-sub'));
-    document.getElementById(`btn-${id}`).classList.add('active-sub');
-    
-    // Al cambiar materia, limpiamos problemas hasta que el usuario busque
-    document.getElementById('questions').innerHTML = "";
-    document.getElementById('emptyState').style.opacity = "0.1";
-    
+    const icons = { QUIM:'test-tube', FIS:'physics', MATII:'math', MACSII:'line-chart', TINII:'circuit', DTECII:'drafting-compass' };
+    document.getElementById('placeholder-icon').src = `https://img.icons8.com/fluency/240/${icons[id]}.png`;
+    document.querySelectorAll('.subject-tab').forEach(t => t.classList.toggle('active-sub', t.id === `btn-${id}`));
     loadData();
 }
-
-function render() {
-    const container = document.getElementById('questions');
-    const emptyState = document.getElementById('emptyState');
-    
-    const year = document.getElementById('yearSelect').value;
-    const topic = document.getElementById('topicSelect').value;
-    const model = document.getElementById('modelSelect').value;
-    const term = document.getElementById('search').value.toLowerCase();
-
-    // SI NO HAY FILTROS ACTIVOS, NO RENDERIZAR NADA
-    if (year === 'all' && topic === 'all' && term === "") {
-        container.innerHTML = "";
-        emptyState.style.opacity = "0.1";
-        return;
-    }
-
-    const filtered = allQuestions.filter(q => 
-        (q.text||"").toLowerCase().includes(term) && 
-        (topic==='all'||q.topic_name===topic) && 
-        (year==='all'||q.exam_year==year) && 
-        (model==='all'||q.exam_model===model)
-    );
-
-    emptyState.style.opacity = "0";
-    container.innerHTML = "";
-    
-    filtered.forEach(q => {
-        const hasSol = q.solution && q.solution.length > 10;
-        const card = document.createElement('div');
-        card.className = "data-row";
-        card.innerHTML = `
-            <div class="card-header-area">
-                <span class="text-2xl font-black">${q.exam_year}</span>
-                <span class="text-[10px] text-gray-400 font-bold uppercase ml-2">${q.exam_model || ''}</span>
-            </div>
-            <div class="card-content-area prose prose-sm dark:prose-invert">
-                ${marked.parse(cleanText(q.text))}
-                ${q.has_image ? `<img src="${q.image_data}" class="problem-image">` : ''}
-            </div>
-            <div class="card-tags-area">
-                <span class="px-3 py-1 bg-blue-500 text-white rounded-lg text-[8px] font-black uppercase">${q.topic_name}</span>
-            </div>
-            <div class="card-footer-area flex gap-2 border-t dark:border-zinc-800 pt-4">
-                <button onclick="toggleInExam('${q.id}')" class="btn-app bg-gray-100 dark:bg-zinc-800">AÑADIR</button>
-                <button onclick="toggleSol('${q.id}')" class="btn-app ${hasSol ? 'btn-sol-active' : 'opacity-30'}">SOLUCIÓN</button>
-            </div>
-            <div id="sol-${q.id}" class="solucion-panel hidden mt-4 p-5 bg-gray-50 dark:bg-zinc-900 rounded-2xl">
-                ${marked.parse(cleanText(q.solution || ""))}
-            </div>`;
-        container.appendChild(card);
-    });
-    renderMathInElement(container, { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] });
-}
-
-// --- ADMIN UI ---
-function toggleAdminPanel() {
-    if (auth.currentUser?.email !== MY_ADMIN_EMAIL) return;
-    const panel = document.getElementById('adminPanel');
-    panel.classList.toggle('hidden');
-    if (!panel.classList.contains('hidden')) loadRequests();
-}
-
-function toggleRightPanel(forceOpen = false) {
-    const panel = document.getElementById('rightPanel');
-    if (forceOpen) panel.classList.remove('collapsed');
-    else panel.classList.toggle('collapsed');
-}
-
-function toggleMenu() { document.getElementById('sidebar').classList.toggle('collapsed'); }
-
-// ... (Resto de funciones: cleanText, loadData, populateSelectors, etc., igual que v6.7)
+// (Añadir populateSelectors, handleYearChange, runSorteo y printExam de v6.7)
 </script>
 </body>
 </html>
