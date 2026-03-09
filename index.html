@@ -24,7 +24,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Lora:italic,wght@400;600&display=swap');
         :root { --bg: #F8F9FA; --subject-color: #000000; }
         body { background-color: var(--bg); font-family: 'Inter', sans-serif; transition: background 0.3s; overflow-x: hidden; }
-
+        
         .glass-header { background: white; border-bottom: 1px solid #eee; padding: 0.5rem 1rem; display: flex; align-items: center; justify-content: space-between; height: 70px; position: sticky; top: 0; z-50; }
         .dark .glass-header { background: #121212; border-color: #333; }
 
@@ -60,7 +60,7 @@
         .card-footer-area { grid-area: footer; }
 
         .btn-app { @apply px-4 py-2 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all active:scale-95; border: 1px solid transparent; }
-        .btn-sol-active { border-radius: 0.75rem !important; }
+        .btn-sol-active { background: var(--subject-color) !important; color: white !important; border-radius: 0.75rem !important; }
         
         .problem-image { width: 100%; border-radius: 12px; margin: 1rem 0; }
         sub { font-size: 0.75em; line-height: 0; position: relative; vertical-align: baseline; bottom: -0.25em; }
@@ -109,11 +109,11 @@
             <div class="pt-4 space-y-3">
                 <input id="h-inst-mob" type="text" placeholder="Institución" class="w-full p-2 text-[10px] rounded border dark:bg-zinc-900 dark:border-zinc-700">
                 <div class="grid grid-cols-2 gap-2">
-                    <select id="autoYearFrom-mob" class="border rounded p-2 text-[10px] dark:bg-zinc-900 dark:border-zinc-700"></select>
-                    <select id="autoYearTo-mob" class="border rounded p-2 text-[10px] dark:bg-zinc-900 dark:border-zinc-700"></select>
+                    <select id="autoYearFrom-mob" class="border rounded p-2 text-[10px] dark:bg-zinc-900"></select>
+                    <select id="autoYearTo-mob" class="border rounded p-2 text-[10px] dark:bg-zinc-900"></select>
                 </div>
-                <button id="mobSorteoBtn" onclick="runSorteo('mob')" class="w-full py-2 bg-blue-600 text-white rounded-xl font-black text-[9px]" disabled>SORTEAR</button>
-                <button onclick="printExam('mob')" class="w-full py-2 bg-black text-white dark:bg-white dark:text-black rounded-xl font-black text-[9px]" disabled>GENERAR PDF</button>
+                <button onclick="runSorteo('mob')" class="w-full py-2 bg-blue-600 text-white rounded-xl font-black text-[9px]">SORTEAR</button>
+                <button onclick="printExam('mob')" class="w-full py-2 bg-black text-white dark:bg-white dark:text-black rounded-xl font-black text-[9px]">GENERAR PDF</button>
             </div>
         </details>
 
@@ -153,7 +153,7 @@
                     <select id="autoYearFrom" class="border rounded p-2 text-[10px] dark:bg-zinc-900 dark:border-zinc-700"></select>
                     <select id="autoYearTo" class="border rounded p-2 text-[10px] dark:bg-zinc-900 dark:border-zinc-700"></select>
                 </div>
-                <button onclick="runSorteo('pc')" class="w-full py-2.5 bg-blue-600 text-white rounded-xl font-black text-[9px]" disabled>SORTEAR</button>
+                <button onclick="runSorteo('pc')" class="w-full py-2.5 bg-blue-600 text-white rounded-xl font-black text-[9px]">SORTEAR</button>
             </div>
             <div class="space-y-3">
                 <p class="text-[9px] font-black text-gray-400 uppercase">Cabecera PDF</p>
@@ -163,7 +163,7 @@
             <div class="bg-gray-100 dark:bg-zinc-800 p-4 rounded-2xl text-center">
                 <p class="text-[9px] font-bold uppercase">Seleccionados: <span id="examCount" class="text-blue-600 text-lg">0</span></p>
             </div>
-            <button onclick="printExam()" class="w-full py-4 bg-black text-white dark:bg-white dark:text-black rounded-2xl text-[10px] font-black tracking-widest uppercase shadow-xl" disabled>GENERAR PDF</button>
+            <button onclick="printExam()" class="w-full py-4 bg-black text-white dark:bg-white dark:text-black rounded-2xl text-[10px] font-black tracking-widest uppercase shadow-xl">GENERAR PDF</button>
         </div>
     </aside>
 </div>
@@ -189,7 +189,7 @@
 
 <script>
 // CONFIG ADMIN: Pon aquí tu correo para ver el botón de gestión
-const MI_CORREO_ADMIN = "tuemail@gmail.com"; 
+const MI_CORREO_ADMIN = "profeabatistal@gmail.com"; 
 
 const firebaseConfig = {
     apiKey: "AIzaSyDGfPqbfdJwWn_i7NPp4YbyQjYz2EPvoFk",
@@ -205,8 +205,6 @@ auth.onAuthStateChanged(async user => {
     const adminBtn = document.getElementById("adminBtn");
     const rightPanel = document.getElementById("rightPanel");
     const mobileGen = document.getElementById("mobileGen");
-    const mobSorteoBtn = document.getElementById("mobSorteoBtn");
-    const pdfMobBtn = mobileGen.querySelector("button:nth-child(2)");
 
     if (user) {
         btn.innerHTML = `<img src="${user.photoURL}" class="w-4 h-4 rounded-full inline mr-1"> Salir`;
@@ -214,10 +212,6 @@ auth.onAuthStateChanged(async user => {
         
         // Mostrar Admin si eres tú
         if(user.email === MI_CORREO_ADMIN) adminBtn.classList.remove('hidden');
-
-        // Habilitar generador de exámenes
-        mobSorteoBtn.disabled = false;
-        pdfMobBtn.disabled = false;
 
         // Lógica de visualización del generador según plan
         const tokenResult = await user.getIdTokenResult();
@@ -232,10 +226,6 @@ auth.onAuthStateChanged(async user => {
         adminBtn.classList.add('hidden');
         rightPanel.classList.remove('visible');
         mobileGen.classList.add('hidden');
-
-        // Deshabilitar generador de exámenes
-        mobSorteoBtn.disabled = true;
-        pdfMobBtn.disabled = true;
     }
     render();
 });
@@ -334,7 +324,7 @@ function render() {
             </div>
             <div class="card-footer-area flex gap-2 border-t pt-4 dark:border-zinc-800">
                 <button onclick="toggleInExam('${q.id}')" class="btn-app ${isSel ? 'bg-red-500 text-white' : 'bg-gray-100 dark:bg-zinc-800'}">${isSel ? '✕ Quitar' : '+ Añadir'}</button>
-                <button onclick="document.getElementById('sol-${q.id}').classList.toggle('hidden')" class="btn-app ${q.solution ? subjectConfig[currentSubject].color : 'bg-gray-100 dark:bg-zinc-800'}">Solución</button>
+                <button onclick="document.getElementById('sol-${q.id}').classList.toggle('hidden')" class="btn-app bg-gray-100 dark:bg-zinc-800">Solución</button>
             </div>
             <div id="sol-${q.id}" class="solucion-panel hidden mt-4 p-5 bg-gray-50 dark:bg-zinc-900 rounded-2xl border-l-4 border-black dark:border-white">${marked.parse(cleanText(q.solution || ""))}</div>`;
         container.appendChild(card);
