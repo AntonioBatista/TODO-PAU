@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PEvAU-DB | TodoPAU v6.6</title>
+    <title>PEvAU-DB | TodoPAU v7.1</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -35,7 +35,6 @@
         .subject-tab.active-sub { background: white; color: var(--subject-color); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .dark .subject-tab.active-sub { background: #333; color: white; }
 
-        /* Sidebar Izquierdo corregido */
         #sidebar { width: 280px; position: fixed; left: 0; top: 70px; bottom: 0; background: white; border-right: 1px solid #eee; z-index: 45; transition: all 0.3s ease; }
         .dark #sidebar { background: #121212; border-color: #333; }
         #sidebar.collapsed { transform: translateX(-100%); width: 0; padding: 0; visibility: hidden; }
@@ -45,26 +44,13 @@
             #sidebar.collapsed { width: 0; margin-left: -280px; visibility: hidden; }
         }
 
-        /* Panel Derecho corregido */
-        #rightPanel { width: 320px; background: white; border-left: 1px solid #eee; padding: 1.5rem; overflow-y: auto; transition: all 0.3s ease; }
+        #rightPanel { width: 320px; background: white; border-left: 1px solid #eee; padding: 1.5rem; overflow-y: auto; transition: all 0.3s ease; display: none; }
         .dark #rightPanel { background: #121212; border-color: #333; }
-        #rightPanel.collapsed { width: 0; padding: 0; margin-right: -320px; visibility: hidden; }
+        #rightPanel.visible { display: flex; flex-direction: column; }
 
-        /* GRID RESPONSIVO */
-        .data-row { 
-            display: grid; grid-template-columns: 1fr; 
-            grid-template-areas: "header" "content" "tags" "solution" "footer"; 
-            gap: 0.75rem; background: white; border-radius: 20px; border: 1px solid #eee; padding: 1.25rem; 
-        }
+        .data-row { display: grid; grid-template-columns: 1fr; grid-template-areas: "header" "content" "tags" "solution" "footer"; gap: 0.75rem; background: white; border-radius: 20px; border: 1px solid #eee; padding: 1.25rem; }
         .dark .data-row { background: #1e1e1e; border-color: #333; }
-        
-        @media (min-width: 768px) { 
-            .data-row { 
-                grid-template-columns: 1fr 220px; 
-                grid-template-areas: "header tags" "content tags" "solution solution" "footer footer"; 
-                gap: 0 1.5rem;
-            } 
-        }
+        @media (min-width: 768px) { .data-row { grid-template-columns: 1fr 220px; grid-template-areas: "header tags" "content tags" "solution solution" "footer footer"; gap: 0 1.5rem; } }
 
         .card-header-area { grid-area: header; }
         .card-content-area { grid-area: content; align-self: start; }
@@ -79,8 +65,7 @@
         .problem-image { width: 100%; border-radius: 12px; margin: 1rem 0; }
         sub { font-size: 0.75em; line-height: 0; position: relative; vertical-align: baseline; bottom: -0.25em; }
 
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        #empty-logo { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.05; pointer-events: none; width: 300px; transition: opacity 0.5s; }
     </style>
 </head>
 
@@ -93,7 +78,7 @@
         <button onclick="toggleMenu()" class="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg">
             <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
-        <span class="font-black italic text-md hidden sm:block">TodoPAU</span>
+        <span class="font-black italic text-md hidden sm:block tracking-tighter">TodoPAU</span>
     </div>
 
     <nav class="subject-nav mx-2">
@@ -107,10 +92,7 @@
 
     <div class="flex items-center gap-1">
         <button onclick="toggleDarkMode()" class="p-2 rounded-xl text-lg">🌙</button>
-        <button id="loginBtn" class="bg-black text-white dark:bg-white dark:text-black px-3 py-1.5 rounded-xl text-[10px] font-bold">Login</button>
-        <button onclick="toggleRightPanel()" class="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg hidden lg:block">
-            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 5l7 7-7 7"/></svg>
-        </button>
+        <button id="loginBtn" class="bg-black text-white dark:bg-white dark:text-black px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase">Entrar</button>
     </div>
 </header>
 
@@ -122,7 +104,7 @@
             <input id="search" type="text" placeholder="Concepto..." class="w-full bg-transparent border-b p-2 text-sm outline-none dark:border-zinc-700">
         </section>
 
-        <details class="lg:hidden bg-blue-50/50 dark:bg-blue-900/20 p-4 rounded-2xl border border-blue-100 dark:border-blue-800">
+        <details id="mobileGen" class="hidden bg-blue-50/50 dark:bg-blue-900/20 p-4 rounded-2xl border border-blue-100 dark:border-blue-800">
             <summary class="text-[10px] font-black text-blue-800 dark:text-blue-300 uppercase cursor-pointer">Generador de Examen</summary>
             <div class="pt-4 space-y-3">
                 <input id="h-inst-mob" type="text" placeholder="Institución" class="w-full p-2 text-[10px] rounded border dark:bg-zinc-900 dark:border-zinc-700">
@@ -139,28 +121,34 @@
             <select id="topicSelect" onchange="updateDynamicTags(); render();" class="w-full border rounded-xl p-2 text-xs bg-gray-50 dark:bg-zinc-800 dark:border-zinc-700 outline-none"></select>
             <select id="yearSelect" onchange="handleYearChange();" class="w-full border rounded-xl p-2 text-xs bg-gray-50 dark:bg-zinc-800 dark:border-zinc-700 outline-none"></select>
             <select id="modelSelect" onchange="render();" class="w-full border rounded-xl p-2 text-xs bg-gray-50 dark:bg-zinc-800 dark:border-zinc-700 outline-none" disabled>
-                <option value="all">Modelo: Elige año primero</option>
+                <option value="all">Modelo: Todos</option>
             </select>
         </section>
 
         <div id="tagCloudSection" class="hidden">
-            <label class="text-[10px] uppercase font-bold text-gray-400 mb-4 block border-t pt-4 dark:border-zinc-800">Etiquetas</label>
-            <div id="tagCloud" class="flex flex-wrap gap-2"></div>
+            <label class="text-[10px] uppercase font-bold text-gray-400 mb-4 block border-t pt-4 dark:border-zinc-800 text-center">Etiquetas</label>
+            <div id="tagCloud" class="flex flex-wrap gap-2 justify-center"></div>
         </div>
+
         <button onclick="resetFilters()" class="w-full py-2 text-red-500 text-[9px] font-black uppercase">Limpiar Filtros</button>
+
+        <button id="adminBtn" onclick="toggleAdminPanel()" class="hidden w-full py-3 mt-4 border-2 border-dashed border-red-200 text-red-500 rounded-2xl font-black text-[9px] uppercase hover:bg-red-50 transition">
+            ⚙️ Panel Gestión
+        </button>
     </aside>
 
-    <main class="flex-1 overflow-y-auto p-4 md:p-8 relative bg-[#fcfcfc] dark:bg-darkBg custom-scroll">
-        <div id="stats" class="mb-4 text-[9px] font-black text-gray-400 uppercase tracking-widest text-center italic">Cargando datos...</div>
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 relative bg-[#fcfcfc] dark:bg-darkBg">
+        <img id="empty-logo" src="https://img.icons8.com/fluency/240/test-tube.png">
+        <div id="stats" class="mb-4 text-[9px] font-black text-gray-400 uppercase tracking-widest text-center italic">Busca o selecciona un bloque</div>
         <div id="questions" class="max-w-4xl mx-auto flex flex-col gap-4"></div>
-        <div id="loader" class="hidden text-center py-10 opacity-30 italic">Cargando...</div>
+        <div id="loader" class="hidden text-center py-10 opacity-30 italic">Cargando base de datos...</div>
     </main>
 
-    <aside id="rightPanel" class="hidden lg:flex flex-col no-print">
-        <h3 class="font-black text-sm tracking-widest uppercase mb-6">Generador de Examen</h3>
+    <aside id="rightPanel" class="no-print">
+        <h3 class="font-black text-sm tracking-widest uppercase mb-6 text-center">Configurador de Examen</h3>
         <div class="space-y-6 flex-1 overflow-y-auto pr-2 custom-scroll">
             <div class="bg-blue-50/50 dark:bg-blue-900/20 p-5 rounded-3xl border border-blue-100 dark:border-blue-800 space-y-4">
-                <p class="text-[9px] font-black text-blue-800 dark:text-blue-300 uppercase">Sorteo Aleatorio</p>
+                <p class="text-[9px] font-black text-blue-800 dark:text-blue-300 uppercase italic">Sorteo Aleatorio</p>
                 <div class="grid grid-cols-2 gap-2">
                     <select id="autoYearFrom" class="border rounded p-2 text-[10px] dark:bg-zinc-900 dark:border-zinc-700"></select>
                     <select id="autoYearTo" class="border rounded p-2 text-[10px] dark:bg-zinc-900 dark:border-zinc-700"></select>
@@ -169,46 +157,40 @@
             </div>
             <div class="space-y-3">
                 <p class="text-[9px] font-black text-gray-400 uppercase">Cabecera PDF</p>
-                <input id="h-inst" type="text" placeholder="Institución" class="w-full p-3 rounded-xl text-[10px] border dark:bg-zinc-900 dark:border-zinc-700 outline-none">
-                <input id="h-title" type="text" placeholder="Título Examen" class="w-full p-3 rounded-xl text-[10px] border dark:bg-zinc-900 dark:border-zinc-700 outline-none">
+                <input id="h-inst" type="text" placeholder="Institución" class="w-full p-3 rounded-xl text-[10px] border dark:bg-zinc-900 dark:border-zinc-700">
+                <input id="h-title" type="text" placeholder="Título Examen" class="w-full p-3 rounded-xl text-[10px] border dark:bg-zinc-900 dark:border-zinc-700">
             </div>
             <div class="bg-gray-100 dark:bg-zinc-800 p-4 rounded-2xl text-center">
                 <p class="text-[9px] font-bold uppercase">Seleccionados: <span id="examCount" class="text-blue-600 text-lg">0</span></p>
             </div>
-            <button onclick="printExam()" class="w-full py-4 bg-black text-white dark:bg-white dark:text-black rounded-2xl text-[10px] font-black tracking-widest shadow-lg">GENERAR PDF</button>
+            <button onclick="printExam()" class="w-full py-4 bg-black text-white dark:bg-white dark:text-black rounded-2xl text-[10px] font-black tracking-widest uppercase shadow-xl">GENERAR PDF</button>
         </div>
     </aside>
 </div>
 
 <div id="adminPanel" class="fixed inset-0 bg-black/80 z-[200] hidden flex items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white dark:bg-darkCard w-full max-w-md rounded-3xl p-8 shadow-2xl">
+    <div class="bg-white dark:bg-darkCard w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl">
         <div class="flex justify-between items-center mb-6">
             <h2 class="font-black text-xl uppercase italic">Gestión de Alumnos</h2>
             <button onclick="toggleAdminPanel()" class="text-gray-400">✕</button>
         </div>
         <div class="space-y-6">
-            <div>
-                <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Email del Alumno</label>
-                <input id="adminUserEmail" type="email" placeholder="ejemplo@gmail.com" class="w-full p-3 rounded-xl border dark:bg-zinc-900 dark:border-zinc-700 text-sm outline-none">
-            </div>
-            <div>
-                <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Asignar Nivel</label>
-                <select id="adminUserPlan" class="w-full p-3 rounded-xl border dark:bg-zinc-900 dark:border-zinc-700 text-xs outline-none">
-                    <option value="estudiante">Estudiante (3 años / Todas materias)</option>
-                    <option value="pro">Estudiante Pro (Histórico + Soluciones)</option>
-                    <option value="docente">Docente (Generador PDF + Cabeceras)</option>
-                </select>
-            </div>
-            <button onclick="updateUserLevel()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all">Actualizar Permisos</button>
+            <input id="adminUserEmail" type="email" placeholder="Email del alumno" class="w-full p-3 rounded-xl border dark:bg-zinc-900 text-sm outline-none">
+            <select id="adminUserPlan" class="w-full p-3 rounded-xl border dark:bg-zinc-900 text-xs">
+                <option value="estudiante">Estudiante</option>
+                <option value="pro">Pro</option>
+                <option value="docente">Docente</option>
+            </select>
+            <button onclick="updateUserLevel()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-lg">Actualizar Permisos</button>
             <p id="adminStatus" class="text-[10px] text-center font-bold uppercase"></p>
         </div>
     </div>
 </div>
 
-<div onclick="toggleAdminPanel()" style="position:fixed; bottom:0; left:0; width:40px; height:40px; cursor:pointer; opacity:0; z-index:250;" title="Panel Admin"></div>
-
 <script>
-// --- FIREBASE & APP ---
+// CONFIG ADMIN: Pon aquí tu correo para ver el botón de gestión
+const MI_CORREO_ADMIN = "tuemail@gmail.com"; 
+
 const firebaseConfig = {
     apiKey: "AIzaSyDGfPqbfdJwWn_i7NPp4YbyQjYz2EPvoFk",
     authDomain: "todopau-bat.firebaseapp.com",
@@ -218,15 +200,32 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-auth.onAuthStateChanged(user => {
+auth.onAuthStateChanged(async user => {
     const btn = document.getElementById("loginBtn");
-    window.isUserLogged = !!user;
+    const adminBtn = document.getElementById("adminBtn");
+    const rightPanel = document.getElementById("rightPanel");
+    const mobileGen = document.getElementById("mobileGen");
+
     if (user) {
-        btn.innerHTML = `<img src="${user.photoURL}" class="w-4 h-4 rounded-full inline">`;
+        btn.innerHTML = `<img src="${user.photoURL}" class="w-4 h-4 rounded-full inline mr-1"> Salir`;
         btn.onclick = () => auth.signOut().then(() => location.reload());
+        
+        // Mostrar Admin si eres tú
+        if(user.email === MI_CORREO_ADMIN) adminBtn.classList.remove('hidden');
+
+        // Lógica de visualización del generador según plan
+        const tokenResult = await user.getIdTokenResult();
+        const plan = tokenResult.claims.plan || 'estudiante';
+        if(plan === 'docente') {
+            rightPanel.classList.add('visible');
+            mobileGen.classList.remove('hidden');
+        }
     } else {
         btn.textContent = "Entrar";
         btn.onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+        adminBtn.classList.add('hidden');
+        rightPanel.classList.remove('visible');
+        mobileGen.classList.add('hidden');
     }
     render();
 });
@@ -237,12 +236,12 @@ function toggleDarkMode() {
 }
 
 const subjectConfig = {
-    'QUIM': { folder: 'quimica', color: '#00c853' },
-    'FIS': { folder: 'fisica', color: '#2979ff' },
-    'MATII': { folder: 'matii', color: '#651fff' },
-    'MACSII': { folder: 'macsii', color: '#f50057' },
-    'TINII': { folder: 'tinii', color: '#ff9100' },
-    'DTECII': { folder: 'dtecii', color: '#455a64' }
+    'QUIM': { folder: 'quimica', color: '#00c853', icon: 'test-tube' },
+    'FIS': { folder: 'fisica', color: '#2979ff', icon: 'physics' },
+    'MATII': { folder: 'matii', color: '#651fff', icon: 'math' },
+    'MACSII': { folder: 'macsii', color: '#f50057', icon: 'line-chart' },
+    'TINII': { folder: 'tinii', color: '#ff9100', icon: 'circuit' },
+    'DTECII': { folder: 'dtecii', color: '#455a64', icon: 'drafting-compass' }
 };
 
 let currentSubject = "QUIM";
@@ -250,20 +249,18 @@ let allQuestions = [];
 let selectedIds = new Set();
 let activeTagFilter = "all";
 
-// --- UI FUNCTIONS ---
-function toggleMenu() {
-    document.getElementById('sidebar').classList.toggle('collapsed');
-    const o = document.getElementById('menuOverlay');
-    if(window.innerWidth < 1024) o.classList.toggle('hidden');
-}
-
-function toggleRightPanel() {
-    document.getElementById('rightPanel').classList.toggle('collapsed');
-}
-
-function toggleAdminPanel() {
-    console.log("Admin trigger pulsado");
-    document.getElementById('adminPanel').classList.toggle('hidden');
+function switchSubject(id) {
+    currentSubject = id;
+    document.documentElement.style.setProperty('--subject-color', subjectConfig[id].color);
+    document.querySelectorAll('.subject-tab').forEach(b => b.classList.remove('active-sub'));
+    document.getElementById(`btn-${id}`).classList.add('active-sub');
+    document.getElementById('empty-logo').src = `https://img.icons8.com/fluency/240/${subjectConfig[id].icon}.png`;
+    
+    // Limpiamos la pantalla al cambiar materia
+    document.getElementById('questions').innerHTML = "";
+    document.getElementById('empty-logo').style.opacity = "0.05";
+    
+    loadData();
 }
 
 function cleanText(t) {
@@ -292,29 +289,31 @@ async function loadData() {
 function render() {
     const year = document.getElementById('yearSelect').value;
     const topic = document.getElementById('topicSelect').value;
-    const model = document.getElementById('modelSelect').value;
     const term = document.getElementById('search').value.toLowerCase();
     const container = document.getElementById('questions');
+    const emptyLogo = document.getElementById('empty-logo');
+
+    // ESTADO LIMPIO: Si no hay filtros, no pintar nada y mostrar logo
+    if (year === 'all' && topic === 'all' && term === "") {
+        container.innerHTML = "";
+        emptyLogo.style.opacity = "0.05";
+        return;
+    }
 
     const filtered = allQuestions.filter(q => 
         (q.text||"").toLowerCase().includes(term) && (topic==='all'||q.topic_name===topic) && 
-        (year==='all'||q.exam_year==year) && (model==='all'||q.exam_model===model) &&
-        (activeTagFilter==='all'||q.detected_topics?.includes(activeTagFilter))
+        (year==='all'||q.exam_year==year)
     );
 
-    document.getElementById('stats').textContent = `${filtered.length} RESULTADOS`;
+    emptyLogo.style.opacity = "0";
     container.innerHTML = '';
     
     filtered.forEach(q => {
         const isSel = selectedIds.has(q.id);
-        const hasSol = q.solution && q.solution.trim().length > 5;
         const card = document.createElement('div');
         card.className = `data-row ${isSel ? 'ring-2 ring-black dark:ring-white' : ''}`;
         card.innerHTML = `
-            <div class="card-header-area">
-                <h2 class="text-2xl font-black">${q.exam_year}</h2>
-                <span class="text-[9px] font-bold text-gray-400 uppercase">${q.exam_model || ''}</span>
-            </div>
+            <div class="card-header-area"><h2 class="text-2xl font-black">${q.exam_year} <span class="text-[9px] text-gray-400 uppercase font-bold ml-2">${q.exam_model || ''}</span></h2></div>
             <div class="card-content-area prose prose-sm dark:prose-invert">
                 ${marked.parse(cleanText(q.text))}
                 ${q.has_image ? `<img src="${q.image_data}" class="problem-image">` : ''}
@@ -324,16 +323,10 @@ function render() {
                 ${(q.detected_topics || []).map(t => `<span class="px-3 py-1 bg-emerald-500 text-white rounded-lg text-[8px] font-black uppercase">${t}</span>`).join('')}
             </div>
             <div class="card-footer-area flex gap-2 border-t pt-4 dark:border-zinc-800">
-                <button onclick="toggleInExam('${q.id}')" class="btn-app ${isSel ? 'bg-red-500 text-white' : 'bg-gray-100 dark:bg-zinc-800'}">
-                    ${isSel ? 'QUITAR' : 'SELECCIONAR'}
-                </button>
-                <button onclick="toggleSol('${q.id}')" class="btn-app ${hasSol ? 'btn-sol-active' : 'bg-gray-100 dark:bg-zinc-800 opacity-40'}">
-                    ${hasSol ? 'SOLUCIÓN' : 'SIN SOLUCIÓN'}
-                </button>
+                <button onclick="toggleInExam('${q.id}')" class="btn-app ${isSel ? 'bg-red-500 text-white' : 'bg-gray-100 dark:bg-zinc-800'}">${isSel ? '✕ Quitar' : '+ Añadir'}</button>
+                <button onclick="document.getElementById('sol-${q.id}').classList.toggle('hidden')" class="btn-app bg-gray-100 dark:bg-zinc-800">Solución</button>
             </div>
-            <div id="sol-${q.id}" class="solucion-panel hidden mt-4 p-4 bg-gray-50 dark:bg-zinc-900 rounded-xl">
-                ${marked.parse(cleanText(q.solution || ""))}
-            </div>`;
+            <div id="sol-${q.id}" class="solucion-panel hidden mt-4 p-5 bg-gray-50 dark:bg-zinc-900 rounded-2xl border-l-4 border-black dark:border-white">${marked.parse(cleanText(q.solution || ""))}</div>`;
         container.appendChild(card);
     });
     renderMathInElement(container, { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] });
@@ -342,37 +335,19 @@ function render() {
 function handleYearChange() {
     const year = document.getElementById('yearSelect').value;
     const mSel = document.getElementById('modelSelect');
-    if (year === 'all') {
-        mSel.innerHTML = '<option value="all">Modelo: Elige año primero</option>';
-        mSel.disabled = true;
-    } else {
+    if (year === 'all') { mSel.disabled = true; } 
+    else {
         const availableModels = [...new Set(allQuestions.filter(q => q.exam_year == year).map(q => q.exam_model))].sort();
         mSel.innerHTML = '<option value="all">Modelo: Todos</option>';
         availableModels.forEach(m => { mSel.innerHTML += `<option value="${m}">${m}</option>`; });
         mSel.disabled = false;
     }
-    updateDynamicTags();
     render();
 }
 
-function toggleSol(id) {
-    if(!window.isUserLogged) return alert("Inicia sesión primero");
-    document.getElementById(`sol-${id}`).classList.toggle('hidden');
-}
-
-function toggleInExam(id) {
-    selectedIds.has(id) ? selectedIds.delete(id) : selectedIds.add(id);
-    document.getElementById('examCount').textContent = selectedIds.size;
-    render();
-}
-
-function switchSubject(id) {
-    currentSubject = id;
-    document.documentElement.style.setProperty('--subject-color', subjectConfig[id].color);
-    document.querySelectorAll('.subject-tab').forEach(b => b.classList.remove('active-sub'));
-    document.getElementById(`btn-${id}`).classList.add('active-sub');
-    loadData();
-}
+function toggleMenu() { document.getElementById('sidebar').classList.toggle('collapsed'); }
+function toggleAdminPanel() { document.getElementById('adminPanel').classList.toggle('hidden'); }
+function toggleRightPanel() { document.getElementById('rightPanel').classList.toggle('visible'); }
 
 function populateSelectors() {
     const tSel = document.getElementById('topicSelect'), ySel = document.getElementById('yearSelect');
@@ -390,73 +365,24 @@ function populateSelectors() {
     fill(document.getElementById('autoYearTo-mob'), years, "Hasta...");
 }
 
-function runSorteo(mode) {
-    const from = parseInt(document.getElementById(mode === 'pc' ? 'autoYearFrom' : 'autoYearFrom-mob').value);
-    const to = parseInt(document.getElementById(mode === 'pc' ? 'autoYearTo' : 'autoYearTo-mob').value);
-    const pool = allQuestions.filter(q => (isNaN(from) || q.exam_year >= from) && (isNaN(to) || q.exam_year <= to));
-    if(pool.length === 0) return alert("Sin resultados");
-    selectedIds.clear();
-    const shuffled = pool.sort(() => 0.5 - Math.random());
-    shuffled.slice(0, 1).forEach(q => selectedIds.add(q.id));
-    document.getElementById('examCount').textContent = selectedIds.size;
-    render();
-}
-
-function printExam() {
-    if(!window.isUserLogged) return alert("Inicia sesión");
-    window.print();
-}
-
-function updateDynamicTags() {
-    const topic = document.getElementById('topicSelect').value, year = document.getElementById('yearSelect').value;
-    const section = document.getElementById('tagCloudSection');
-    if (topic === 'all' && year === 'all') return section.classList.add('hidden');
-    section.classList.remove('hidden');
-    const visibleQs = allQuestions.filter(q => (topic==='all'||q.topic_name===topic) && (year==='all'||q.exam_year==year));
-    const counts = {};
-    visibleQs.forEach(q => q.detected_topics?.forEach(t => counts[t] = (counts[t] || 0) + 1));
-    const cloud = document.getElementById('tagCloud'); cloud.innerHTML = "";
-    Object.keys(counts).forEach(t => {
-        const span = document.createElement('span');
-        span.className = `px-3 py-1 bg-gray-100 dark:bg-zinc-800 text-[9px] font-bold rounded-lg cursor-pointer ${activeTagFilter === t ? 'bg-black text-white' : ''}`;
-        span.textContent = t;
-        span.onclick = () => { activeTagFilter = (activeTagFilter === t) ? "all" : t; render(); };
-        cloud.appendChild(span);
-    });
-}
-
-function resetFilters() {
-    document.getElementById('search').value = ""; document.getElementById('topicSelect').value = "all";
-    document.getElementById('yearSelect').value = "all"; handleYearChange();
-    activeTagFilter = "all"; render();
-}
-
 async function updateUserLevel() {
     const email = document.getElementById('adminUserEmail').value;
     const plan = document.getElementById('adminUserPlan').value;
     const status = document.getElementById('adminStatus');
     const token = await auth.currentUser.getIdToken();
     status.textContent = "Procesando...";
-    status.className = "text-[10px] text-center font-bold uppercase text-blue-500";
     try {
         const response = await fetch('https://backend-todopau.onrender.com/api/admin/set-plan', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ email, plan })
         });
-        if (response.ok) {
-            status.textContent = "¡Nivel actualizado con éxito!";
-            status.className = "text-[10px] text-center font-bold uppercase text-green-500";
-        } else { throw new Error("Error en el servidor"); }
-    } catch (error) {
-        status.textContent = "Error al actualizar";
-        status.className = "text-[10px] text-center font-bold uppercase text-red-500";
-    }
+        if (response.ok) { status.textContent = "¡Éxito!"; status.className = "text-green-500 text-[10px] font-bold uppercase"; }
+    } catch (e) { status.textContent = "Error"; }
 }
 
 document.addEventListener('DOMContentLoaded', () => { 
     document.getElementById('search').oninput = render; 
-    if(localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
     switchSubject('QUIM'); 
 });
 </script>
