@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PEvAU-DB | TodoPAU v6.5</title>
+    <title>PEvAU-DB | TodoPAU v6.6</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -22,205 +22,131 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Lora:italic,wght@400;600&display=swap');
-        :root { --bg: #F8F9FA; --subject-color: #000000; }
-        body { background-color: var(--bg); font-family: 'Inter', sans-serif; transition: background 0.3s; }
-        
-        .glass-header { background: white; border-bottom: 1px solid #eee; padding: 0.5rem 1rem; display: flex; align-items: center; justify-content: space-between; height: 70px; position: sticky; top: 0; z-50; }
-        .dark .glass-header { background: #121212; border-color: #333; }
-
-        .subject-nav { display: flex; gap: 6px; align-items: center; background: #f1f5f9; padding: 4px; border-radius: 14px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-        .dark .subject-nav { background: #1e1e1e; }
-        .subject-nav::-webkit-scrollbar { display: none; }
-        .subject-tab { flex-shrink: 0; padding: 6px 12px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; color: #64748b; cursor: pointer; }
-        .subject-tab.active-sub { background: white; color: var(--subject-color); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .dark .subject-tab.active-sub { background: #333; color: white; }
-
-        #sidebar { width: 280px; position: fixed; left: 0; top: 70px; bottom: 0; background: white; border-right: 1px solid #eee; z-index: 45; transition: transform 0.3s ease; }
-        .dark #sidebar { background: #121212; border-color: #333; }
+        :root { --subject-color: #000000; }
+        body { @apply bg-gray-50 dark:bg-darkBg font-sans transition-colors duration-300; }
+        .glass-header { @apply sticky top-0 z-50 flex items-center justify-between h-[70px] px-4 border-b bg-white/80 dark:bg-darkBg/80 backdrop-blur-md dark:border-zinc-800; }
+        .subject-nav { @apply flex gap-2 p-1 bg-gray-100 dark:bg-zinc-800 rounded-2xl overflow-x-auto no-scrollbar; }
+        .subject-tab { @apply flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold text-gray-500 cursor-pointer; }
+        .subject-tab.active-sub { @apply bg-white dark:bg-zinc-700 text-black dark:text-white shadow-sm; color: var(--subject-color); }
+        #sidebar { @apply fixed lg:relative top-[70px] lg:top-0 h-[calc(100vh-70px)] lg:h-auto w-[280px] bg-white dark:bg-darkBg border-r dark:border-zinc-800 z-40 transition-transform duration-300; }
         #sidebar.collapsed { transform: translateX(-100%); }
-
-        @media (min-width: 1024px) {
-            #sidebar { position: relative; top: 0; transform: none !important; }
-            #sidebar.collapsed { width: 0; overflow: hidden; border: none; }
-        }
-
-        /* GRID RESPONSIVO */
-        .data-row { 
-            display: grid; grid-template-columns: 1fr; 
-            grid-template-areas: "header" "content" "tags" "solution" "footer"; 
-            gap: 0.75rem; background: white; border-radius: 20px; border: 1px solid #eee; padding: 1.25rem; 
-        }
-        .dark .data-row { background: #1e1e1e; border-color: #333; }
-        
-        @media (min-width: 768px) { 
-            .data-row { 
-                grid-template-columns: 1fr 220px; 
-                grid-template-areas: "header tags" "content tags" "solution solution" "footer footer"; 
-                gap: 0 1.5rem;
-            } 
-        }
-
-        .card-header-area { grid-area: header; }
-        .card-content-area { grid-area: content; align-self: start; }
-        .card-tags-area { grid-area: tags; display: flex; flex-wrap: wrap; gap: 0.4rem; align-self: start; }
-        @media (min-width: 768px) { .card-tags-area { flex-direction: column; align-items: flex-end; } }
-        .solucion-panel { grid-area: solution; }
-        .card-footer-area { grid-area: footer; }
-
-        /* Botones unificados */
-        .btn-app { @apply px-4 py-2 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all active:scale-95; border: 1px solid transparent; }
-        .btn-sol-active { background: var(--subject-color) !important; color: white !important; border-radius: 0.75rem !important; }
-        
-        #rightPanel { width: 320px; background: white; border-left: 1px solid #eee; padding: 1.5rem; overflow-y: auto; }
-        .dark #rightPanel { background: #121212; border-color: #333; }
-        
-        .problem-image { width: 100%; border-radius: 12px; margin: 1rem 0; }
+        .data-row { @apply bg-white dark:bg-darkCard border dark:border-zinc-800 rounded-3xl p-5 shadow-sm mb-4; display: grid; grid-template-columns: 1fr; grid-template-areas: "header" "content" "tags" "solution" "footer"; gap: 1rem; }
+        @media (min-width: 768px) { .data-row { grid-template-columns: 1fr 220px; grid-template-areas: "header tags" "content tags" "solution solution" "footer footer"; gap: 0 1.5rem; } }
+        .card-tags-area { grid-area: tags; @apply flex flex-wrap md:flex-col gap-2 md:items-end self-start; }
+        .btn-app { @apply px-4 py-2 rounded-xl font-bold text-[10px] uppercase transition-all active:scale-95; }
+        .btn-sol-active { background: var(--subject-color) !important; color: white !important; }
+        #rightPanel { @apply hidden lg:flex flex-col w-[320px] bg-white dark:bg-darkBg border-l dark:border-zinc-800 p-6 overflow-y-auto; }
         sub { font-size: 0.75em; line-height: 0; position: relative; vertical-align: baseline; bottom: -0.25em; }
     </style>
 </head>
 
-<body class="h-screen flex flex-col dark:bg-darkBg dark:text-gray-100">
+<body class="h-screen flex flex-col">
 
-<div id="menuOverlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/30 z-40 hidden lg:hidden backdrop-blur-sm"></div>
+<div id="menuOverlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/40 z-30 hidden lg:hidden"></div>
 
 <header class="glass-header no-print">
-    <div class="flex items-center gap-2">
-        <button onclick="toggleMenu()" class="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg">
-            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
-        <span class="font-black italic text-md hidden sm:block">TodoPAU</span>
-    </div>
-
+    <button onclick="toggleMenu()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
     <nav class="subject-nav mx-2">
         <div onclick="switchSubject('QUIM')" id="btn-QUIM" class="subject-tab active-sub">Química</div>
         <div onclick="switchSubject('FIS')" id="btn-FIS" class="subject-tab">Física</div>
         <div onclick="switchSubject('MATII')" id="btn-MATII" class="subject-tab">Mat II</div>
-        <div onclick="switchSubject('MACSII')" id="btn-MACSII" class="subject-tab">CCSS II</div>
+        <div onclick="switchSubject('MACSII')" id="btn-MACSII" class="subject-tab">CCSS</div>
         <div onclick="switchSubject('TINII')" id="btn-TINII" class="subject-tab">Tecno</div>
         <div onclick="switchSubject('DTECII')" id="btn-DTECII" class="subject-tab">Dibujo</div>
     </nav>
-
-    <div class="flex items-center gap-1">
+    <div class="flex items-center gap-2">
         <button onclick="toggleDarkMode()" class="p-2 rounded-xl">🌙</button>
-        <button id="loginBtn" class="bg-black text-white dark:bg-white dark:text-black px-3 py-1.5 rounded-xl text-[10px] font-bold">Login</button>
+        <button id="loginBtn" class="btn-app bg-gray-100 dark:bg-zinc-800">Login</button>
     </div>
 </header>
 
 <div class="flex flex-1 overflow-hidden relative">
-    
-    <aside id="sidebar" class="no-print p-6 flex flex-col gap-5 overflow-y-auto collapsed">
+    <aside id="sidebar" class="p-6 flex flex-col gap-5 overflow-y-auto collapsed no-print">
         <section>
-            <label class="text-[10px] uppercase font-bold text-gray-400 mb-2 block tracking-widest">Buscador</label>
-            <input id="search" type="text" placeholder="Concepto..." class="w-full bg-transparent border-b p-2 text-sm outline-none dark:border-zinc-700">
+            <label class="text-[10px] font-bold text-gray-400 uppercase">Buscador</label>
+            <input id="search" type="text" placeholder="Buscar..." class="w-full bg-transparent border-b p-2 text-sm outline-none dark:border-zinc-700">
         </section>
 
-        <details class="lg:hidden bg-blue-50/50 dark:bg-blue-900/20 p-4 rounded-2xl border border-blue-100 dark:border-blue-800">
-            <summary class="text-[10px] font-black text-blue-800 dark:text-blue-300 uppercase cursor-pointer">Generador de Examen</summary>
+        <details id="docentePanelMob" class="hidden lg:hidden bg-blue-50/50 dark:bg-blue-900/20 p-4 rounded-2xl border border-blue-100 dark:border-blue-800">
+            <summary class="text-[10px] font-black text-blue-800 dark:text-blue-300 uppercase cursor-pointer">Panel Docente</summary>
             <div class="pt-4 space-y-3">
                 <input id="h-inst-mob" type="text" placeholder="Institución" class="w-full p-2 text-[10px] rounded border dark:bg-zinc-900 dark:border-zinc-700">
-                <div class="grid grid-cols-2 gap-2">
-                    <select id="autoYearFrom-mob" class="border rounded p-2 text-[10px] dark:bg-zinc-900"></select>
-                    <select id="autoYearTo-mob" class="border rounded p-2 text-[10px] dark:bg-zinc-900"></select>
-                </div>
-                <button onclick="runSorteo('mob')" class="w-full py-2 bg-blue-600 text-white rounded-xl font-black text-[9px]">SORTEAR</button>
-                <button onclick="printExam('mob')" class="w-full py-2 bg-black text-white dark:bg-white dark:text-black rounded-xl font-black text-[9px]">GENERAR PDF</button>
+                <button onclick="runSorteo('mob')" class="w-full py-2 bg-blue-600 text-white rounded-lg font-black text-[9px]">SORTEAR</button>
+                <button onclick="printExam()" class="w-full py-2 bg-black text-white dark:bg-white rounded-lg font-black text-[9px]">PDF</button>
             </div>
         </details>
 
         <section class="space-y-3">
-            <select id="topicSelect" onchange="updateDynamicTags(); render();" class="w-full border rounded-xl p-2 text-xs bg-gray-50 dark:bg-zinc-800 dark:border-zinc-700 outline-none"></select>
-            <select id="yearSelect" onchange="handleYearChange();" class="w-full border rounded-xl p-2 text-xs bg-gray-50 dark:bg-zinc-800 dark:border-zinc-700 outline-none"></select>
-            <select id="modelSelect" onchange="render();" class="w-full border rounded-xl p-2 text-xs bg-gray-50 dark:bg-zinc-800 dark:border-zinc-700 outline-none" disabled>
-                <option value="all">Modelo: Elige año primero</option>
+            <select id="topicSelect" onchange="updateDynamicTags(); render();" class="w-full border rounded-xl p-2 text-xs bg-gray-50 dark:bg-zinc-800 dark:border-zinc-700"></select>
+            <select id="yearSelect" onchange="handleYearChange();" class="w-full border rounded-xl p-2 text-xs bg-gray-50 dark:bg-zinc-800 dark:border-zinc-700"></select>
+            <select id="modelSelect" onchange="render();" class="w-full border rounded-xl p-2 text-xs bg-gray-50 dark:bg-zinc-800 dark:border-zinc-700" disabled>
+                <option value="all">Elegir año primero</option>
             </select>
         </section>
-
-        <div id="tagCloudSection" class="hidden">
-            <label class="text-[10px] uppercase font-bold text-gray-400 mb-4 block border-t pt-4 dark:border-zinc-800">Etiquetas</label>
-            <div id="tagCloud" class="flex flex-wrap gap-2"></div>
-        </div>
-        <button onclick="resetFilters()" class="w-full py-2 text-red-500 text-[9px] font-black uppercase">Limpiar Filtros</button>
+        <button onclick="resetFilters()" class="mt-auto py-2 text-red-500 text-[9px] font-black uppercase">Limpiar Filtros</button>
     </aside>
 
-    <main class="flex-1 overflow-y-auto p-4 md:p-8 relative bg-[#fcfcfc] dark:bg-darkBg custom-scroll">
-        <div id="stats" class="mb-4 text-[9px] font-black text-gray-300 uppercase tracking-widest text-center italic">Cargando datos...</div>
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 relative bg-gray-50 dark:bg-darkBg">
+        <div id="stats" class="mb-4 text-[10px] font-black text-gray-400 uppercase text-center">Cargando base de datos...</div>
         <div id="questions" class="max-w-4xl mx-auto flex flex-col gap-4"></div>
-        <div id="loader" class="hidden text-center py-10 opacity-30 italic">Cargando...</div>
+        <div id="loader" class="hidden text-center py-10 italic opacity-30">Cargando...</div>
     </main>
 
-    <aside id="rightPanel" class="hidden lg:flex flex-col no-print">
-        <h3 class="font-black text-sm tracking-widest uppercase mb-6">Generador de Examen</h3>
-        <div class="space-y-6 flex-1 overflow-y-auto pr-2">
-            <div class="bg-blue-50/50 dark:bg-blue-900/20 p-5 rounded-3xl border border-blue-100 dark:border-blue-800 space-y-4">
-                <p class="text-[9px] font-black text-blue-800 dark:text-blue-300 uppercase">Sorteo Aleatorio</p>
-                <div class="grid grid-cols-2 gap-2">
-                    <select id="autoYearFrom" class="border rounded p-2 text-[10px] dark:bg-zinc-900 dark:border-zinc-700"></select>
-                    <select id="autoYearTo" class="border rounded p-2 text-[10px] dark:bg-zinc-900 dark:border-zinc-700"></select>
+    <aside id="rightPanel" class="hidden no-print">
+        <h3 class="font-black text-sm uppercase mb-6">Generador de Examen</h3>
+        <div class="space-y-6">
+            <div class="bg-blue-50/50 dark:bg-blue-900/20 p-5 rounded-3xl border border-blue-100 dark:border-blue-800">
+                <p class="text-[9px] font-black text-blue-800 dark:text-blue-300 uppercase mb-4">Sorteo</p>
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <select id="autoYearFrom" class="p-2 text-[10px] rounded border dark:bg-zinc-900"></select>
+                    <select id="autoYearTo" class="p-2 text-[10px] rounded border dark:bg-zinc-900"></select>
                 </div>
-                <button onclick="runSorteo('pc')" class="w-full py-2.5 bg-blue-600 text-white rounded-xl font-black text-[9px]">SORTEAR</button>
+                <button onclick="runSorteo('pc')" class="w-full py-2 bg-blue-600 text-white rounded-xl font-black text-[9px]">SORTEAR</button>
             </div>
-            <div class="space-y-3">
-                <p class="text-[9px] font-black text-gray-400 uppercase">Cabecera PDF</p>
-                <input id="h-inst" type="text" placeholder="Institución" class="w-full p-3 rounded-xl text-[10px] border dark:bg-zinc-900 dark:border-zinc-700">
-                <input id="h-title" type="text" placeholder="Título Examen" class="w-full p-3 rounded-xl text-[10px] border dark:bg-zinc-900 dark:border-zinc-700">
+            <input id="h-inst" type="text" placeholder="Institución" class="w-full p-3 rounded-xl text-[10px] border dark:bg-zinc-900">
+            <div class="p-4 bg-gray-100 dark:bg-zinc-800 rounded-2xl text-center">
+                <p class="text-[9px] font-bold">EXAMEN: <span id="examCount" class="text-blue-600 text-lg">0</span></p>
             </div>
-            <div class="bg-gray-100 dark:bg-zinc-800 p-4 rounded-2xl text-center">
-                <p class="text-[9px] font-bold uppercase">Seleccionados: <span id="examCount" class="text-blue-600 text-lg">0</span></p>
-            </div>
-            <button onclick="printExam('pc')" class="w-full py-4 bg-black text-white dark:bg-white dark:text-black rounded-2xl text-[10px] font-black tracking-widest">GENERAR PDF</button>
+            <button onclick="printExam()" class="w-full py-4 bg-black text-white dark:bg-white dark:text-black rounded-2xl text-[10px] font-black tracking-widest">GENERAR PDF</button>
         </div>
     </aside>
 </div>
 
 <script>
-// FIREBASE CONFIG
-const firebaseConfig = {
-  apiKey: "AIzaSyDGfPqbfdJwWn_i7NPp4YbyQjYz2EPvoFk",
-  authDomain: "todopau-bat.firebaseapp.com",
-  projectId: "todopau-bat",
-  appId: "1:329604600256:web:d0b43bc40bb2c821c67825"
-};
+/* CONFIGURACIÓN */
+const firebaseConfig = { apiKey: "AIzaSyDGfPqbfdJwWn_i7NPp4YbyQjYz2EPvoFk", authDomain: "todopau-bat.firebaseapp.com", projectId: "todopau-bat", appId: "1:329604600256:web:d0b43bc40bb2c821c67825" };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
+window.userPlan = 'basico'; 
 
-auth.onAuthStateChanged(user => {
+auth.onAuthStateChanged(async user => {
     const btn = document.getElementById("loginBtn");
-    window.isUserLogged = !!user;
     if (user) {
+        // AQUÍ CONECTARÍAS CON TU BACKEND PARA OBTENER EL PLAN REAL
+        // window.userPlan = await fetchPlan(user.uid); 
+        window.userPlan = 'docente'; // Simulamos plan docente para pruebas
         btn.innerHTML = `<img src="${user.photoURL}" class="w-4 h-4 rounded-full inline">`;
         btn.onclick = () => auth.signOut().then(() => location.reload());
     } else {
+        window.userPlan = 'basico';
         btn.textContent = "Entrar";
         btn.onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
     }
+    updatePlanUI();
     render();
 });
 
-function toggleDarkMode() {
-    const isDark = document.documentElement.classList.toggle('dark');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+function updatePlanUI() {
+    // Control de visibilidad del generador
+    const isDocente = window.userPlan === 'docente';
+    document.getElementById('rightPanel').classList.toggle('hidden', !isDocente);
+    document.getElementById('docentePanelMob').classList.toggle('hidden', !isDocente);
 }
 
-const subjectConfig = {
-    'QUIM': { folder: 'quimica', color: '#00c853' },
-    'FIS': { folder: 'fisica', color: '#2979ff' },
-    'MATII': { folder: 'matii', color: '#651fff' },
-    'MACSII': { folder: 'macsii', color: '#f50057' },
-    'TINII': { folder: 'tinii', color: '#ff9100' },
-    'DTECII': { folder: 'dtecii', color: '#455a64' }
-};
-
-let currentSubject = "QUIM";
-let allQuestions = [];
-let selectedIds = new Set();
-let activeTagFilter = "all";
-
-function toggleMenu() {
-    const s = document.getElementById('sidebar');
-    const o = document.getElementById('menuOverlay');
-    s.classList.toggle('collapsed');
-    if(window.innerWidth < 1024) o.classList.toggle('hidden');
-}
+const subjectConfig = { 'QUIM': { folder: 'quimica', color: '#00c853' }, 'FIS': { folder: 'fisica', color: '#2979ff' }, 'MATII': { folder: 'matii', color: '#651fff' }, 'MACSII': { folder: 'macsii', color: '#f50057' }, 'TINII': { folder: 'tinii', color: '#ff9100' }, 'DTECII': { folder: 'dtecii', color: '#455a64' } };
+let currentSubject = "QUIM", allQuestions = [], selectedIds = new Set(), activeTagFilter = "all";
 
 function cleanText(t) {
     if(!t) return "";
@@ -228,6 +154,8 @@ function cleanText(t) {
     const map = {'3³':'ó','3a':'ía','3º':'ú','3i':'í','3e':'é','3n':'ón','3u':'ú','3A':'Á','3O':'Ó'};
     Object.keys(map).forEach(k => c = c.replace(new RegExp(k, 'g'), map[k]));
     const subs = {'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉'};
+    const chg = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','+':'⁺','-':'⁻'};
+    c = c.replace(/([A-Z][a-z]?|[\)])(\d*)([\+\-])(?=\s|$|\.|\,)/g, (m, e, n, s) => e + n.split('').map(x=>chg[x]).join('') + chg[s]);
     return c.replace(/\b([A-Z][a-z]?)(\d+)\b/g, (m, el, n) => el + n.split('').map(x=>subs[x]).join(''));
 }
 
@@ -249,156 +177,4 @@ function render() {
     const year = document.getElementById('yearSelect').value;
     const topic = document.getElementById('topicSelect').value;
     const model = document.getElementById('modelSelect').value;
-    const term = document.getElementById('search').value.toLowerCase();
-    const container = document.getElementById('questions');
-
-    const filtered = allQuestions.filter(q => 
-        (q.text||"").toLowerCase().includes(term) && (topic==='all'||q.topic_name===topic) && 
-        (year==='all'||q.exam_year==year) && (model==='all'||q.exam_model===model) &&
-        (activeTagFilter==='all'||q.detected_topics?.includes(activeTagFilter))
-    );
-
-    document.getElementById('stats').textContent = `${filtered.length} RESULTADOS`;
-    container.innerHTML = '';
-    
-    filtered.forEach(q => {
-        const isSel = selectedIds.has(q.id);
-        const hasSol = q.solution && q.solution.trim().length > 5;
-        const card = document.createElement('div');
-        card.className = `data-row ${isSel ? 'ring-2 ring-black dark:ring-white' : ''}`;
-        card.innerHTML = `
-            <div class="card-header-area">
-                <h2 class="text-2xl font-black">${q.exam_year}</h2>
-                <span class="text-[9px] font-bold text-gray-400 uppercase">${q.exam_model || ''}</span>
-            </div>
-            <div class="card-content-area prose prose-sm dark:prose-invert">
-                ${marked.parse(cleanText(q.text))}
-                ${q.has_image ? `<img src="${q.image_data}" class="problem-image">` : ''}
-            </div>
-            <div class="card-tags-area">
-                <span class="px-3 py-1 bg-blue-500 text-white rounded-lg text-[8px] font-black uppercase">${q.topic_name}</span>
-                ${(q.detected_topics || []).map(t => `<span class="px-3 py-1 bg-emerald-500 text-white rounded-lg text-[8px] font-black uppercase">${t}</span>`).join('')}
-            </div>
-            <div class="card-footer-area flex gap-2 border-t pt-4 dark:border-zinc-800">
-                <button onclick="toggleInExam('${q.id}')" class="btn-app ${isSel ? 'bg-red-500 text-white' : 'bg-gray-100 dark:bg-zinc-800'}">
-                    ${isSel ? 'QUITAR' : 'SELECCIONAR'}
-                </button>
-                <button onclick="toggleSol('${q.id}')" class="btn-app ${hasSol ? 'btn-sol-active' : 'bg-gray-100 dark:bg-zinc-800 opacity-40'}">
-                    ${hasSol ? 'SOLUCIÓN' : 'SIN SOLUCIÓN'}
-                </button>
-            </div>
-            <div id="sol-${q.id}" class="solucion-panel hidden mt-4 p-4 bg-gray-50 dark:bg-zinc-900 rounded-xl">
-                ${marked.parse(cleanText(q.solution || ""))}
-            </div>`;
-        container.appendChild(card);
-    });
-    renderMathInElement(container, { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] });
-}
-
-// LOGICA DE FILTRO DEPENDIENTE (AÑO -> MODELO)
-function handleYearChange() {
-    const year = document.getElementById('yearSelect').value;
-    const mSel = document.getElementById('modelSelect');
-    
-    if (year === 'all') {
-        mSel.innerHTML = '<option value="all">Modelo: Elige año primero</option>';
-        mSel.disabled = true;
-    } else {
-        const availableModels = [...new Set(allQuestions.filter(q => q.exam_year == year).map(q => q.exam_model))].sort();
-        mSel.innerHTML = '<option value="all">Modelo: Todos</option>';
-        availableModels.forEach(m => {
-            mSel.innerHTML += `<option value="${m}">${m}</option>`;
-        });
-        mSel.disabled = false;
-    }
-    updateDynamicTags();
-    render();
-}
-
-function toggleSol(id) {
-    if(!window.isUserLogged) return alert("Inicia sesión primero");
-    document.getElementById(`sol-${id}`).classList.toggle('hidden');
-}
-
-function toggleInExam(id) {
-    selectedIds.has(id) ? selectedIds.delete(id) : selectedIds.add(id);
-    document.getElementById('examCount').textContent = selectedIds.size;
-    render();
-}
-
-function switchSubject(id) {
-    currentSubject = id;
-    document.documentElement.style.setProperty('--subject-color', subjectConfig[id].color);
-    document.querySelectorAll('.subject-tab').forEach(b => b.classList.remove('active-sub'));
-    document.getElementById(`btn-${id}`).classList.add('active-sub');
-    if(window.innerWidth < 1024) toggleMenu();
-    loadData();
-}
-
-function populateSelectors() {
-    const tSel = document.getElementById('topicSelect'), ySel = document.getElementById('yearSelect');
-    const topics = [...new Set(allQuestions.map(q => q.topic_name))].sort();
-    const years = [...new Set(allQuestions.map(q => q.exam_year))].sort((a,b)=>b-a);
-
-    const fill = (el, items, lbl) => {
-        el.innerHTML = `<option value="all">${lbl}</option>`;
-        items.forEach(i => el.innerHTML += `<option value="${i}">${i}</option>`);
-    };
-    fill(tSel, topics, "Temas..."); fill(ySel, years, "Años...");
-    
-    const sortedYears = [...years].sort();
-    fill(document.getElementById('autoYearFrom'), sortedYears, "Desde...");
-    fill(document.getElementById('autoYearTo'), years, "Hasta...");
-    fill(document.getElementById('autoYearFrom-mob'), sortedYears, "Desde...");
-    fill(document.getElementById('autoYearTo-mob'), years, "Hasta...");
-}
-
-function runSorteo(mode) {
-    const from = parseInt(document.getElementById(mode === 'pc' ? 'autoYearFrom' : 'autoYearFrom-mob').value);
-    const to = parseInt(document.getElementById(mode === 'pc' ? 'autoYearTo' : 'autoYearTo-mob').value);
-    const pool = allQuestions.filter(q => (isNaN(from) || q.exam_year >= from) && (isNaN(to) || q.exam_year <= to));
-    if(pool.length === 0) return alert("Sin resultados");
-    selectedIds.clear();
-    const shuffled = pool.sort(() => 0.5 - Math.random());
-    shuffled.slice(0, 1).forEach(q => selectedIds.add(q.id));
-    document.getElementById('examCount').textContent = selectedIds.size;
-    render();
-}
-
-function printExam() {
-    if(!window.isUserLogged) return alert("Inicia sesión");
-    window.print();
-}
-
-function updateDynamicTags() {
-    const topic = document.getElementById('topicSelect').value, year = document.getElementById('yearSelect').value;
-    const section = document.getElementById('tagCloudSection');
-    if (topic === 'all' && year === 'all') return section.classList.add('hidden');
-    section.classList.remove('hidden');
-    const visibleQs = allQuestions.filter(q => (topic==='all'||q.topic_name===topic) && (year==='all'||q.exam_year==year));
-    const counts = {};
-    visibleQs.forEach(q => q.detected_topics?.forEach(t => counts[t] = (counts[t] || 0) + 1));
-    const cloud = document.getElementById('tagCloud'); cloud.innerHTML = "";
-    Object.keys(counts).forEach(t => {
-        const span = document.createElement('span');
-        span.className = `px-3 py-1 bg-gray-100 dark:bg-zinc-800 text-[9px] font-bold rounded-lg cursor-pointer ${activeTagFilter === t ? 'bg-black text-white' : ''}`;
-        span.textContent = t;
-        span.onclick = () => { activeTagFilter = (activeTagFilter === t) ? "all" : t; render(); };
-        cloud.appendChild(span);
-    });
-}
-
-function resetFilters() {
-    document.getElementById('search').value = ""; document.getElementById('topicSelect').value = "all";
-    document.getElementById('yearSelect').value = "all"; handleYearChange();
-    activeTagFilter = "all"; render();
-}
-
-document.addEventListener('DOMContentLoaded', () => { 
-    document.getElementById('search').oninput = render; 
-    if(localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
-    switchSubject('QUIM'); 
-});
-</script>
-</body>
-</html>
+    const term = document.getElementById('search').value
