@@ -18,6 +18,12 @@
             darkMode: 'class',
             theme: { extend: { colors: { darkBg: '#121212', darkCard: '#1e1e1e', darkBorder: '#333333' } } }
         }
+
+        // 🎨 Aplicar color inicial de la primera materia al cargar
+document.addEventListener('DOMContentLoaded', () => {
+    const initial = subjectConfig[currentSubject];
+    document.documentElement.style.setProperty('--subject-color', initial.color);
+});
     </script>
 
     <style>
@@ -458,6 +464,7 @@ function updateDynamicTags() {
 document.addEventListener('DOMContentLoaded', () => { 
     document.getElementById('search').oninput = render; 
 });
+
 </script>
 </body>
 </html>
