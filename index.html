@@ -446,6 +446,11 @@ function updateDynamicTags() {
 document.addEventListener('DOMContentLoaded', () => { 
     document.getElementById('search').oninput = render; 
 });
+    // 🎨 Aplicar color inicial de la primera materia al cargar
+document.addEventListener('DOMContentLoaded', () => {
+    const initial = subjectConfig[currentSubject];
+    document.documentElement.style.setProperty('--subject-color', initial.color);
+});
 </script>
 </body>
 </html>
