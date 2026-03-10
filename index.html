@@ -66,15 +66,43 @@
         .card-footer-area { grid-area: footer; }
 
         /* ESTILO PILL (CAPSULA) TOTALMENTE REDONDEADO */
-        .btn-pill { @apply px-5 py-2.5 rounded-full font-black text-[9px] uppercase tracking-wider transition-all active:scale-95 shadow-sm; border: 1px solid transparent; }
+.btn-pill{
+    padding: 0.65rem 1.4rem;
+    border-radius: 9999px;
+    font-weight: 900;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    transition: all .2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,.05);
+    border: 1px solid transparent;
+}
         .btn-sol-active { background: var(--subject-color) !important; color: white !important; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
         
         /* TAGS REDONDEADOS EN ENUNCIADOS */
-        .problem-tag { @apply px-4 py-1.5 rounded-full text-[9px] font-black uppercase whitespace-nowrap shadow-sm transition-colors; }
+.problem-tag{
+    padding: 0.4rem 1.1rem;
+    border-radius: 9999px;
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0,0,0,.05);
+}
 
         /* NUBE DE TAGS DINÁMICA REDONDEADA */
-        .tag-pill { @apply px-4 py-2 rounded-full transition-all cursor-pointer font-bold inline-block shadow-sm; background: #f1f5f9; color: #64748b; }
-        .dark .tag-pill { background: #27272a; color: #a1a1aa; }
+.tag-pill{
+    padding: 0.5rem 1.2rem;
+    border-radius: 9999px;
+    cursor: pointer;
+    font-weight: 700;
+    display: inline-block;
+    box-shadow: 0 1px 2px rgba(0,0,0,.05);
+    background: #f1f5f9;
+    color: #64748b;
+    transition: all .2s ease;
+}        .dark .tag-pill { background: #27272a; color: #a1a1aa; }
         .tag-pill:hover { background: var(--subject-color); color: white; transform: scale(1.05); }
         .tag-pill.active-tag { background: var(--subject-color); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
