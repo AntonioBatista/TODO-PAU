@@ -30,6 +30,10 @@ document.addEventListener('DOMContentLoaded', () => {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Lora:italic,wght@400;600&display=swap');
         :root { --bg: #F8F9FA; --subject-color: #000000; }
         body { background-color: var(--bg); font-family: 'Inter', sans-serif; transition: background 0.3s; overflow-x: hidden; }
+
+        #questions{
+        transition: all 0.25s ease;
+        }
         
         .glass-header { background: white; border-bottom: 1px solid #eee; padding: 0.5rem 1rem; display: flex; align-items: center; justify-content: space-between; height: 70px; position: sticky; top: 0; z-50; }
         .dark .glass-header { background: #121212; border-color: #333; }
@@ -211,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <main class="flex-1 overflow-y-auto p-4 md:p-10 relative bg-[#fcfcfc] dark:bg-darkBg custom-scroll">
         <img id="empty-logo" src="https://img.icons8.com/fluency/240/test-tube.png">
         <div id="stats" class="mb-4 text-[9px] font-black text-gray-300 uppercase tracking-widest text-center italic">Busca o selecciona un tema</div>
-        <div id="questions" class="max-w-5xl mx-auto flex flex-col gap-10 relative z-10"></div>
+        <div id="questions" class="w-full max-w-[1400px] mx-auto flex flex-col gap-10 relative z-10 px-4 md:px-8"></div> 
         <div id="loader" class="hidden text-center py-10 opacity-30 italic">Sincronizando base de datos...</div>
     </main>
 
