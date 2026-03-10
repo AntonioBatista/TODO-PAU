@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PEvAU-DB | TodoPAU v8.3</title>
+    <title>PEvAU-DB | TodoPAU v8.4</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -65,17 +65,17 @@
         .solucion-panel { grid-area: solution; }
         .card-footer-area { grid-area: footer; }
 
-        /* BOTONES ESTILO PÍLDORA (CAPSULA) */
-        .btn-pill { @apply px-5 py-2 rounded-full font-bold text-[10px] uppercase tracking-wider transition-all active:scale-95; border: 1px solid transparent; }
+        /* ESTILO PILL (CAPSULA) TOTALMENTE REDONDEADO */
+        .btn-pill { @apply px-5 py-2.5 rounded-full font-black text-[9px] uppercase tracking-wider transition-all active:scale-95 shadow-sm; border: 1px solid transparent; }
         .btn-sol-active { background: var(--subject-color) !important; color: white !important; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         
         /* TAGS REDONDEADOS EN ENUNCIADOS */
-        .problem-tag { @apply px-4 py-1.5 rounded-full text-[9px] font-black uppercase whitespace-nowrap shadow-sm; }
+        .problem-tag { @apply px-4 py-1.5 rounded-full text-[9px] font-black uppercase whitespace-nowrap shadow-sm transition-colors; }
 
-        /* NUBE DE TAGS REDONDEADA Y DINÁMICA */
-        .tag-pill { @apply px-4 py-2 rounded-full transition-all cursor-pointer font-bold inline-block; background: #f1f5f9; color: #64748b; }
+        /* NUBE DE TAGS DINÁMICA REDONDEADA */
+        .tag-pill { @apply px-4 py-2 rounded-full transition-all cursor-pointer font-bold inline-block shadow-sm; background: #f1f5f9; color: #64748b; }
         .dark .tag-pill { background: #27272a; color: #a1a1aa; }
-        .tag-pill:hover { background: var(--subject-color); color: white; opacity: 0.8; transform: scale(1.05); }
+        .tag-pill:hover { background: var(--subject-color); color: white; transform: scale(1.05); }
         .tag-pill.active-tag { background: var(--subject-color); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
         #empty-logo { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.05; pointer-events: none; width: 300px; }
@@ -312,7 +312,7 @@ function render() {
                 ${q.has_image ? `<img src="${q.image_data}" class="w-full max-w-2xl rounded-2xl my-4 mx-auto shadow-sm">` : ''}
             </div>
             <div class="card-tags-area">
-                <span class="problem-tag bg-blue-500 text-white">${q.topic_name}</span>
+                <span class="problem-tag bg-blue-500 text-white" style="background-color: var(--subject-color); opacity: 0.8">${q.topic_name}</span>
                 ${(q.detected_topics || []).map(t => `<span class="problem-tag bg-emerald-500 text-white">${t}</span>`).join('')}
             </div>
             <div class="card-footer-area flex gap-3 border-t pt-5 dark:border-zinc-800">
@@ -320,7 +320,7 @@ function render() {
                 <button onclick="toggleSolView('${q.id}')" class="btn-pill ${hasSol ? 'btn-sol-active' : 'bg-gray-100 dark:bg-zinc-800 opacity-30'}">Solución</button>
             </div>
             <div id="sol-${q.id}" class="solucion-panel hidden mt-6 p-6 bg-gray-50 dark:bg-zinc-900 rounded-[2rem] border-l-8" style="border-color: var(--subject-color)">
-                ${hasSol ? marked.parse(cleanText(q.solution)) : '<p class="text-xs italic opacity-50 text-center py-4">Solución bloqueada para tu nivel de acceso.</p>'}
+                ${hasSol ? marked.parse(cleanText(q.solution)) : '<p class="text-xs italic opacity-50 text-center py-4">Inicia sesión o adquiere un plan Pro para ver las soluciones.</p>'}
             </div>`;
         container.appendChild(card);
     });
