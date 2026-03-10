@@ -330,6 +330,18 @@ function render() {
     filtered.forEach(q => {
         const isSel = selectedIds.has(q.id);
         const hasSol = q.solution && q.solution.toString().trim().length > 3;
+
+        const isQuim = currentSubject === 'QUIM';
+
+        const topicTag = isQuim
+          ? `<span class="problem-tag bg-emerald-500 text-white">${q.topic_name}</span>`
+          : `<span class="problem-tag text-white" style="background-color: var(--subject-color); opacity:0.85">${q.topic_name}</span>`;
+        
+        const conceptTags = (q.detected_topics || []).map(t =>
+          isQuim
+            ? `<span class="problem-tag text-white" style="background-color: var(--subject-color)">${t}</span>`
+            : `<span class="problem-tag bg-emerald-500 text-white">${t}</span>`
+        ).join('');
         
         const card = document.createElement('div');
         card.className = `data-row ${isSel ? 'ring-2 ring-black dark:ring-white' : ''}`;
@@ -340,8 +352,8 @@ function render() {
                 ${q.has_image ? `<img src="${q.image_data}" class="w-full max-w-2xl rounded-2xl my-4 mx-auto shadow-sm">` : ''}
             </div>
             <div class="card-tags-area">
-                <span class="problem-tag bg-blue-500 text-white" style="background-color: var(--subject-color); opacity: 0.8">${q.topic_name}</span>
-                ${(q.detected_topics || []).map(t => `<span class="problem-tag bg-emerald-500 text-white">${t}</span>`).join('')}
+                ${topicTag}
+                ${conceptTags}
             </div>
             <div class="card-footer-area flex gap-3 border-t pt-5 dark:border-zinc-800">
                 <button onclick="toggleInExam('${q.id}')" class="btn-pill ${isSel ? 'bg-red-500 text-white' : 'bg-gray-100 dark:bg-zinc-800 text-gray-500'}">${isSel ? '✕ Quitar' : '+ Añadir'}</button>
