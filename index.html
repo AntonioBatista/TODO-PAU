@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PEvAU-DB | TodoPAU v7.6</title>
+    <title>PEvAU-DB | TodoPAU v7.7</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -49,13 +49,37 @@
         #rightPanel.active { display: block; }
         #rightPanel.collapsed { width: 0; padding: 0; margin-right: -320px; visibility: hidden; }
 
-        .data-row { display: grid; grid-template-columns: 1fr; grid-template-areas: "header" "content" "tags" "solution" "footer"; gap: 0.75rem; background: white; border-radius: 20px; border: 1px solid #eee; padding: 1.25rem; }
+        /* GRID CORREGIDO PARA EVITAR APELOTONAMIENTO */
+        .data-row { 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            grid-template-areas: "header" "content" "tags" "footer" "solution"; 
+            gap: 1.25rem; background: white; border-radius: 24px; border: 1px solid #eee; padding: 1.75rem; 
+        }
         .dark .data-row { background: #1e1e1e; border-color: #333; }
-        @media (min-width: 768px) { .data-row { grid-template-columns: 1fr 220px; grid-template-areas: "header tags" "content tags" "solution solution" "footer footer"; gap: 0 1.5rem; } }
+        
+        @media (min-width: 1024px) { 
+            .data-row { 
+                grid-template-columns: 1fr 280px; 
+                grid-template-areas: "header tags" "content tags" "footer tags" "solution solution"; 
+                column-gap: 2.5rem;
+            } 
+        }
+
+        .card-header-area { grid-area: header; }
+        .card-content-area { grid-area: content; align-self: start; line-height: 1.6; }
+        .card-tags-area { grid-area: tags; display: flex; flex-wrap: wrap; gap: 0.5rem; align-self: start; }
+        @media (min-width: 1024px) { .card-tags-area { flex-direction: column; align-items: flex-end; } }
+        .solucion-panel { grid-area: solution; }
+        .card-footer-area { grid-area: footer; }
 
         .btn-app { @apply px-4 py-2 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all active:scale-95; border: 1px solid transparent; }
-        .btn-sol-active { background: var(--subject-color) !important; color: white !important; border-radius: 0.75rem !important; }
+        /* COLOR AZUL PARA SOLUCIÓN ACTIVA */
+        .btn-sol-active { background: #2563eb !important; color: white !important; border-radius: 0.75rem !important; opacity: 1 !important; }
         
+        .problem-image { width: 100%; border-radius: 12px; margin: 1rem 0; }
+        sub { font-size: 0.75em; line-height: 0; position: relative; vertical-align: baseline; bottom: -0.25em; }
+
         #empty-logo { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.05; pointer-events: none; width: 300px; transition: opacity 0.3s; }
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -136,7 +160,7 @@
     <main class="flex-1 overflow-y-auto p-4 md:p-10 relative bg-[#fcfcfc] dark:bg-darkBg custom-scroll">
         <img id="empty-logo" src="https://img.icons8.com/fluency/240/test-tube.png">
         <div id="stats" class="mb-4 text-[9px] font-black text-gray-300 uppercase tracking-widest text-center italic">Busca o selecciona un tema</div>
-        <div id="questions" class="max-w-4xl mx-auto flex flex-col gap-6 relative z-10"></div>
+        <div id="questions" class="max-w-5xl mx-auto flex flex-col gap-8 relative z-10"></div>
         <div id="loader" class="hidden text-center py-10 opacity-30 italic">Cargando...</div>
     </main>
 
@@ -211,9 +235,9 @@ auth.onAuthStateChanged(async user => {
             const tokenResult = await user.getIdTokenResult();
             const plan = tokenResult.claims.plan || 'estudiante';
             if(plan === 'docente' || user.email === MI_CORREO_ADMIN) {
-                rightPanel.classList.add('active'); // Mostrar panel derecho
-                arrow.classList.remove('hidden');   // Mostrar flecha en PC
-                mobileGen.classList.remove('hidden'); // Mostrar generador móvil
+                rightPanel.classList.add('active');
+                arrow.classList.remove('hidden');
+                mobileGen.classList.remove('hidden');
             }
         } catch(e) {}
     } else {
@@ -301,21 +325,24 @@ function render() {
     
     filtered.forEach(q => {
         const isSel = selectedIds.has(q.id);
+        const hasSol = q.solution && q.solution.trim().length > 5;
         const card = document.createElement('div');
         card.className = `data-row ${isSel ? 'ring-2 ring-black dark:ring-white' : ''}`;
+        
+        // CORRECCIÓN: Se inyecta la clase 'btn-sol-active' solo si 'hasSol' es true
         card.innerHTML = `
             <div class="card-header-area"><h2 class="text-2xl font-black">${q.exam_year} <span class="text-[9px] text-gray-400 font-bold ml-2 uppercase">${q.exam_model || ''}</span></h2></div>
-            <div class="card-content-area prose prose-sm dark:prose-invert">
+            <div class="card-content-area prose prose-sm dark:prose-invert max-w-none">
                 ${marked.parse(cleanText(q.text))}
                 ${q.has_image ? `<img src="${q.image_data}" class="problem-image">` : ''}
             </div>
             <div class="card-tags-area">
-                <span class="px-3 py-1 bg-blue-500 text-white rounded-lg text-[8px] font-black uppercase">${q.topic_name}</span>
-                ${(q.detected_topics || []).map(t => `<span class="px-3 py-1 bg-emerald-500 text-white rounded-lg text-[8px] font-black uppercase">${t}</span>`).join('')}
+                <span class="px-3 py-1 bg-blue-500 text-white rounded-lg text-[8px] font-black uppercase whitespace-nowrap">${q.topic_name}</span>
+                ${(q.detected_topics || []).map(t => `<span class="px-3 py-1 bg-emerald-500 text-white rounded-lg text-[8px] font-black uppercase whitespace-nowrap">${t}</span>`).join('')}
             </div>
             <div class="card-footer-area flex gap-2 border-t pt-4 dark:border-zinc-800">
                 <button onclick="toggleInExam('${q.id}')" class="btn-app ${isSel ? 'bg-red-500 text-white' : 'bg-gray-100 dark:bg-zinc-800'}">${isSel ? '✕ Quitar' : '+ Añadir'}</button>
-                <button onclick="document.getElementById('sol-${q.id}').classList.toggle('hidden')" class="btn-app bg-gray-100 dark:bg-zinc-800">Solución</button>
+                <button onclick="document.getElementById('sol-${q.id}').classList.toggle('hidden')" class="btn-app ${hasSol ? 'btn-sol-active' : 'bg-gray-100 dark:bg-zinc-800 opacity-40'}">Solución</button>
             </div>
             <div id="sol-${q.id}" class="solucion-panel hidden mt-4 p-5 bg-gray-50 dark:bg-zinc-900 rounded-2xl border-l-4 border-black dark:border-white">${marked.parse(cleanText(q.solution || ""))}</div>`;
         container.appendChild(card);
