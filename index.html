@@ -34,6 +34,10 @@ document.addEventListener('DOMContentLoaded', () => {
         #questions{
         transition: all 0.25s ease;
         }
+
+        main{
+        transition: padding 0.3s ease;
+        }
         
         .glass-header { background: white; border-bottom: 1px solid #eee; padding: 0.5rem 1rem; display: flex; align-items: center; justify-content: space-between; height: 70px; position: sticky; top: 0; z-50; }
         .dark .glass-header { background: #121212; border-color: #333; }
@@ -58,11 +62,22 @@ document.addEventListener('DOMContentLoaded', () => {
         .dark #rightPanel { background: #121212; border-color: #333; }
         #rightPanel.active { display: block; }
 
-        .data-row { 
-            display: grid; grid-template-columns: 1fr; 
-            grid-template-areas: "header" "content" "tags" "footer" "solution"; 
-            gap: 1.25rem; background: white; border-radius: 28px; border: 1px solid #eee; padding: 1.75rem; 
-        }
+.data-row { 
+    display: grid;
+    grid-template-columns: 1fr; 
+    grid-template-areas: "header" "content" "tags" "footer" "solution"; 
+    gap: 1.25rem;
+    background: white;
+    border-radius: 28px;
+    border: 1px solid #eee;
+    padding: 1.75rem;
+
+    /* ✨ NUEVO */
+    width: 100%;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+}
         .dark .data-row { background: #1e1e1e; border-color: #333; }
         @media (min-width: 1024px) { 
             .data-row { grid-template-columns: 1fr 240px; grid-template-areas: "header tags" "content tags" "footer tags" "solution solution"; column-gap: 2.5rem; } 
@@ -212,10 +227,10 @@ document.addEventListener('DOMContentLoaded', () => {
         </button>
     </aside>
 
-    <main class="flex-1 overflow-y-auto p-4 md:p-10 relative bg-[#fcfcfc] dark:bg-darkBg custom-scroll">
+    <main class="flex-1 overflow-y-auto p-4 md:p-12 relative bg-[#fcfcfc] dark:bg-darkBg custom-scroll">
         <img id="empty-logo" src="https://img.icons8.com/fluency/240/test-tube.png">
         <div id="stats" class="mb-4 text-[9px] font-black text-gray-300 uppercase tracking-widest text-center italic">Busca o selecciona un tema</div>
-        <div id="questions" class="w-full max-w-[1400px] mx-auto flex flex-col gap-10 relative z-10 px-4 md:px-8"></div> 
+<div id="questions" class="w-full flex flex-col gap-10 relative z-10 px-4 md:px-10 items-center"></div>
         <div id="loader" class="hidden text-center py-10 opacity-30 italic">Sincronizando base de datos...</div>
     </main>
 
