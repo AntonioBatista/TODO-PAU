@@ -134,6 +134,33 @@ document.addEventListener('DOMContentLoaded', () => {
         #empty-logo { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.05; pointer-events: none; width: 300px; }
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        /* 🇪🇸 Banderas Comunidades */
+.flag-btn{
+    border-radius:50%;
+    padding:4px;
+    background:#f1f5f9;
+    transition:all .2s ease;
+    border:2px solid transparent;
+    flex:0 0 auto;
+}
+.flag-btn img{
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    display:block;
+}
+.flag-btn:hover{ transform:scale(1.12); }
+.flag-btn.active-flag{
+    border-color:var(--subject-color);
+    box-shadow:0 0 0 3px rgba(0,0,0,.08);
+    background:white;
+}
+.dark .flag-btn{ background:#27272a; }
+
+#communityBarDesktop::-webkit-scrollbar{ height:4px; }
+#communityBarDesktop::-webkit-scrollbar-thumb{ background:#cbd5e1; border-radius:10px; }
+        
     </style>
 </head>
 
@@ -149,7 +176,11 @@ document.addEventListener('DOMContentLoaded', () => {
         <span class="font-black italic text-md hidden sm:block tracking-tighter">TodoPAU</span>
     </div>
 
-    <nav class="subject-nav mx-2">
+  <!-- 🇪🇸 Comunidades (desktop) -->
+<div id="communityBarDesktop" class="hidden lg:flex items-center gap-2 overflow-x-auto px-3 py-2 border-t border-gray-200 dark:border-zinc-800">
+  <span class="text-[10px] font-black uppercase tracking-widest text-gray-400 mr-2">Comunidades</span>
+  <div id="communityFlagsDesktop" class="flex gap-2"></div>
+</div>
         <div onclick="switchSubject('QUIM')" id="btn-QUIM" class="subject-tab active-sub uppercase">Química</div>
         <div onclick="switchSubject('FIS')" id="btn-FIS" class="subject-tab uppercase">Física</div>
         <div onclick="switchSubject('MATII')" id="btn-MATII" class="subject-tab uppercase">Mat II</div>
@@ -213,6 +244,13 @@ document.addEventListener('DOMContentLoaded', () => {
             <select id="modelSelect" onchange="render();" class="w-full border rounded-xl p-3 text-xs bg-gray-50 dark:bg-zinc-800 dark:border-zinc-700 outline-none" disabled>
                 <option value="all">Modelo: Elige año</option>
             </select>
+            <!-- 🇪🇸 Comunidades (móvil) -->
+<section id="communitySectionMobile" class="lg:hidden space-y-2">
+  <label class="text-[10px] uppercase font-bold text-gray-400 block tracking-widest italic text-center">
+    Comunidades Autónomas
+  </label>
+  <div id="communityFlagsMobile" class="flex flex-wrap gap-2 justify-center"></div>
+</section>
         </section>
 
         <div id="tagCloudSection" class="hidden">
@@ -362,10 +400,30 @@ const subjectConfig = {
     'DTECII': { folder: 'dtecii', color: '#455a64', icon: 'drafting-compass' }
 };
 
+const FLAG_MAP = {
+ "Andalucía, Ceuta, Melilla y Centros en Marruecos": "es-an",
+ "Comunidad de Madrid": "es-md",
+ "Cataluña": "es-ct",
+ "Comunitat Valenciana": "es-vc",
+ "Galicia": "es-ga",
+ "Castilla y León": "es-cl",
+ "País Vasco": "es-pv",
+ "Canarias": "es-cn",
+ "Aragón": "es-ar",
+ "Asturias": "es-as",
+ "Cantabria": "es-cb",
+ "Extremadura": "es-ex",
+ "Islas Baleares": "es-ib",
+ "La Rioja": "es-ri",
+ "Navarra": "es-nc",
+ "Región de Murcia": "es-mc"
+};
+
 let currentSubject = "QUIM";
 let allQuestions = [];
 let selectedIds = new Set();
 let activeTagFilter = "all";
+let activeCommunities = new Set();
 
 function cleanText(t) {
     if(!t) return "";
@@ -390,6 +448,7 @@ async function loadData() {
         const promises = index.topics.map(t => fetch(`https://backend-todopau.onrender.com/api/${subjectConfig[currentSubject].folder}/file?name=${t.file}`, { headers }).then(r => r.json()));
         allQuestions = (await Promise.all(promises)).flat();
         populateSelectors();
+        renderCommunityFlags();
         loader.classList.add('hidden');
         render();
     } catch (e) { loader.classList.add('hidden'); }
@@ -410,7 +469,9 @@ function render() {
         return;
     }
 
-    const filtered = allQuestions.filter(q => 
+    const filtered = allQuestions.filter(q =>
+    (activeCommunities.size===0 || activeCommunities.has(q.community)) &&
+     
         (q.text||"").toLowerCase().includes(term) && (topic==='all'||q.topic_name===topic) && 
         (year==='all'||q.exam_year==year) && (model==='all'||q.exam_model===model) &&
         (activeTagFilter==='all'||q.detected_topics?.includes(activeTagFilter))
@@ -553,6 +614,39 @@ function updateDynamicTags() {
         cloud.appendChild(span);
     });
 }
+
+function renderCommunityFlags(){
+    const desktop = document.getElementById('communityFlagsDesktop');
+    const mobile = document.getElementById('communityFlagsMobile');
+    if(!desktop || !mobile) return;
+
+    desktop.innerHTML = '';
+    mobile.innerHTML = '';
+
+    const communities = [...new Set(allQuestions.map(q => q.community).filter(Boolean))];
+
+    communities.forEach(name=>{
+        const code = FLAG_MAP[name];
+        if(!code) return;
+
+        const makeBtn = () => {
+            const btn = document.createElement('button');
+            btn.className = `flag-btn ${activeCommunities.has(name)?'active-flag':''}`;
+            btn.innerHTML = `<img src="https://flagcdn.com/w40/${code}.png" title="${name}" />`;
+            btn.onclick = ()=>{
+                if(activeCommunities.has(name)) activeCommunities.delete(name);
+                else activeCommunities.add(name);
+                renderCommunityFlags();
+                render();
+            };
+            return btn;
+        };
+
+        desktop.appendChild(makeBtn());
+        mobile.appendChild(makeBtn());
+    });
+}
+
 document.getElementById('adminPanel').addEventListener('click', e => {
     if (e.target.id === 'adminPanel') toggleAdminPanel();
 });
